@@ -1,0 +1,24 @@
+{
+  "name": "Lin Ride",
+  "short_name": "Lin Ride",
+  "description": "Ride, delivery, and errand web app for country communities in Jamaica.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "lang": "en-JM",
+  "dir": "ltr",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#0a130d",
+  "theme_color": "#0d1b12",
+  "categories": ["travel", "navigation", "business"],
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

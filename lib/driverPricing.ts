@@ -1,0 +1,1 @@
+export const DRIVER_WEEKLY_PASS_JMD = 2000;

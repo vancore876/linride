@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 156" role="img" aria-labelledby="title desc">
+  <title id="title">LinRide logo</title>
+  <desc id="desc">LinRide wordmark with a green location pin and a curved road.</desc>
+  <g display="none" aria-hidden="true">
+  <defs>
+    <linearGradient id="green" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#52d13a"/>
+      <stop offset="0.55" stop-color="#2caf22"/>
+      <stop offset="1" stop-color="#177c12"/>
+    </linearGradient>
+    <linearGradient id="dark" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#172425"/>
+      <stop offset="0.55" stop-color="#081010"/>
+      <stop offset="1" stop-color="#020404"/>
+    </linearGradient>
+    <linearGradient id="silver" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.55" stop-color="#dfe5e4"/>
+      <stop offset="1" stop-color="#87908d"/>
+    </linearGradient>
+    <filter id="glow" x="-10%" y="-15%" width="120%" height="135%">
+      <feDropShadow dx="0" dy="8" stdDeviation="5" flood-color="#000000" flood-opacity="0.65"/>
+      <feDropShadow dx="0" dy="0" stdDeviation="2" flood-color="#36c42b" flood-opacity="0.22"/>
+    </filter>
+  </defs>
+
+  <rect width="900" height="360" fill="#000000"/>
+
+  <g filter="url(#glow)">
+    <path d="M91 208c23-67 93-103 196-104 61 0 111 11 167 23-70-2-136 1-196 22-71 25-124 69-167 121 10-25 7-43 0-62Z" fill="#071112" stroke="#253536" stroke-width="2"/>
+    <path d="M126 252c-13-78 54-144 166-156 70-8 123 8 189 22-75-3-149 1-211 25-71 27-118 68-144 109Z" fill="url(#dark)" stroke="#223535" stroke-width="2"/>
+    <path d="M145 238c-7-58 45-109 139-124 39-6 78-6 120-1-90 11-165 47-213 108-18 22-33 26-46 17Z" fill="url(#green)"/>
+    <path d="M158 202c31-44 98-75 185-84-75 15-133 45-174 89l-11-5Z" fill="#f9fffb" opacity="0.96"/>
+    <path d="M179 178c22-13 50-23 83-28l3 7c-31 5-57 14-78 27l-8-6Z" fill="#f9fffb" opacity="0.96"/>
+    <path d="M202 158c15-6 33-11 53-14l2 7c-19 3-36 8-50 14l-5-7Z" fill="#0a1515" opacity="0.75"/>
+
+    <path d="M257 88c84-44 233-59 330-18 43 18 77 46 104 84-42-34-82-59-131-73-94-27-197-17-303 7Z" fill="#101919" stroke="#334243" stroke-width="2"/>
+    <path d="M409 107c38-42 89-59 155-53 28 2 54 10 78 23-63-8-115 9-154 53l-79-23Z" fill="url(#silver)"/>
+    <path d="M554 94c42 4 93 10 153 18 80 11 129 30 156 70-54-22-117-31-189-31H445c-83 0-159-6-229-18 103 5 222 5 355 8 27 0 54 0 82 1-28-21-58-37-99-48Z" fill="#091111" stroke="#334142" stroke-width="2"/>
+    <path d="M291 106c71-28 145-39 221-32-49 5-85 24-111 56-46-8-83-16-110-24Z" fill="#f7fbfa"/>
+    <path d="M618 86c21 13 41 31 61 54l-40-1c-17-21-36-39-58-53h37Z" fill="#eef4f3"/>
+    <ellipse cx="610" cy="139" rx="23" ry="10" fill="#0a1111"/>
+
+    <path d="M204 206h86l-24 69h-86l24-69Z" fill="url(#green)"/>
+    <path d="M331 206h39l-24 69h-39l24-69Z" fill="url(#green)"/>
+    <path d="M391 206h40l64 50 18-50h37l-24 69h-39l-65-49-17 49h-38l24-69Z" fill="url(#green)"/>
+    <path d="M532 196c17-20 34-30 58-33-4 24-20 37-47 39l-11-6Z" fill="url(#green)"/>
+
+    <path d="M574 206h116c35 0 50 17 42 40-5 16-19 26-41 30l25 29h-54l-23-28h-31l-9 28h-41l32-99Zm46 27-6 17h56c10 0 16-3 18-9 2-6-2-8-12-8h-56Z" fill="#050808" stroke="#1f3030" stroke-width="3"/>
+    <path d="M753 206h41l-32 99h-41l32-99Z" fill="#050808" stroke="#1f3030" stroke-width="3"/>
+    <path d="M805 206h93c41 0 62 21 51 55-11 31-39 44-82 44h-94l32-99Zm45 27-15 43h36c19 0 32-7 37-22 4-14-4-21-23-21h-35Z" fill="#050808" stroke="#1f3030" stroke-width="3"/>
+
+    <path d="M227 310h57l-5 10h-58l6-10Zm88 0h400l-5 10H310l5-10Zm558 0h52l-5 10h-53l6-10Z" fill="url(#green)"/>
+    <text x="326" y="323" fill="#b4bcba" font-family="Inter, Arial, sans-serif" font-size="21" font-weight="900" letter-spacing="8">RIDE BETTER. ARRIVE TOGETHER.</text>
+
+    <path d="M792 87c0-18 15-33 33-33s33 15 33 33c0 29-33 67-33 67s-33-38-33-67Z" fill="url(#green)"/>
+    <circle cx="825" cy="87" r="14" fill="#000000"/>
+  </g>
+  </g>
+  <rect x="3" y="3" width="554" height="150" rx="34" fill="#f8fff9" stroke="#d9eadb" stroke-width="6"/>
+  <g transform="translate(18 12)">
+    <path d="M67 4c-31 0-56 24-56 55 0 43 56 73 56 73s56-30 56-73C123 28 98 4 67 4Z" fill="#39c52a"/>
+    <circle cx="67" cy="55" r="20" fill="#f8fff9"/>
+    <path d="M29 118c12-31 36-54 75-67-24 17-39 40-45 70l-16 7-14-10Z" fill="#0b1711"/>
+    <path d="M42 112c10-21 26-38 48-49" fill="none" stroke="#f8fff9" stroke-width="5" stroke-linecap="round" stroke-dasharray="10 11"/>
+  </g>
+  <text x="155" y="103" fill="#39c52a" font-family="Arial Black, Inter, Arial, sans-serif" font-size="69" font-weight="900">LIN</text>
+  <text x="279" y="103" fill="#0b1711" font-family="Arial Black, Inter, Arial, sans-serif" font-size="69" font-weight="900">RIDE</text>
+  <path d="M157 122h346" fill="none" stroke="#d9eadb" stroke-width="5" stroke-linecap="round"/>
+  <path d="M157 122h103" fill="none" stroke="#39c52a" stroke-width="5" stroke-linecap="round"/>
+</svg>

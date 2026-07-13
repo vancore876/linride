@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#30b020" />
+    <title>Lin Ride Offline</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      body {
+        min-height: 100vh;
+        margin: 0;
+        display: grid;
+        place-items: center;
+        background: #070708;
+        color: #ffffff;
+      }
+
+      main {
+        width: min(92vw, 440px);
+        border-radius: 28px;
+        background: #ffffff;
+        color: #111111;
+        padding: 28px;
+        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+      }
+
+      .brand {
+        display: inline-flex;
+        border-radius: 999px;
+        background: #30b020;
+        padding: 10px 14px;
+        font-size: 13px;
+        font-weight: 900;
+        letter-spacing: 0.16em;
+      }
+
+      h1 {
+        margin: 22px 0 10px;
+        font-size: 34px;
+        line-height: 1;
+      }
+
+      p {
+        margin: 0;
+        color: rgba(17, 17, 17, 0.68);
+        font-weight: 700;
+        line-height: 1.6;
+      }
+
+      button {
+        width: 100%;
+        margin-top: 22px;
+        border: 0;
+        border-radius: 18px;
+        background: #111111;
+        color: #ffffff;
+        padding: 14px 18px;
+        font-weight: 900;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <span class="brand">LIN RIDE</span>
+      <h1>You are offline</h1>
+      <p>Lin Ride saved the app for offline use. Reconnect to find drivers, update ride details, or send new requests.</p>
+      <button type="button" onclick="window.location.reload()">Try again</button>
+    </main>
+  </body>
+</html>

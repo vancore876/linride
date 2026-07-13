@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="LinRide app icon">
+  <g display="none" aria-hidden="true">
+  <defs>
+    <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#52d13a"/>
+      <stop offset="1" stop-color="#177c12"/>
+    </linearGradient>
+    <linearGradient id="s" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#87908d"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="28" fill="#000000"/>
+  <path d="M13 77c9-34 45-53 95-42-37-4-68 5-93 28 27-12 59-13 96-8-41 1-76 14-100 48 3-9 3-17 2-26Z" fill="#071112" stroke="#243233" stroke-width="2"/>
+  <path d="M19 92c13-30 44-46 84-45-34 7-60 23-76 49-4 5-6 6-8-4Z" fill="url(#g)"/>
+  <path d="M33 72c12-7 26-12 43-15l3 6c-17 3-31 8-43 15l-3-6Z" fill="#ffffff"/>
+  <path d="M47 54c22-15 57-18 82-5-31-3-56 4-76 19l-6-14Z" fill="url(#s)"/>
+  <path d="M26 83h23l-8 25H18l8-25Z" fill="url(#g)"/>
+  <path d="M56 83h14l22 16 6-16h14l-8 25H90L68 92l-6 16H48l8-25Z" fill="url(#g)"/>
+  <path d="M84 23c15 0 26 10 26 24 0 20-26 51-26 51S58 67 58 47c0-14 11-24 26-24Z" fill="url(#g)"/>
+  <circle cx="84" cy="47" r="10" fill="#000000"/>
+  <path d="M32 114h65" stroke="url(#g)" stroke-width="5" stroke-linecap="round"/>
+  </g>
+  <rect width="128" height="128" rx="28" fill="#0b1711"/>
+  <path d="M64 12c-28 0-50 22-50 49 0 39 50 56 50 56s50-17 50-56c0-27-22-49-50-49Z" fill="#39c52a"/>
+  <circle cx="64" cy="53" r="18" fill="#f8fff9"/>
+  <path d="M29 105c10-28 31-47 67-59-21 15-34 36-40 63l-14 6-13-10Z" fill="#0b1711"/>
+  <path d="M40 100c9-19 23-34 43-44" fill="none" stroke="#f8fff9" stroke-width="5" stroke-linecap="round" stroke-dasharray="9 10"/>
+</svg>
