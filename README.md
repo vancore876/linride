@@ -6,6 +6,12 @@ Passenger slogan: **Local rides. Better experience.**
 
 Driver slogan: **Keep your fare. Pay one weekly pass.**
 
+## Live App
+
+- Production: https://linride-jamaica.netlify.app
+- Source: https://github.com/vancore876/linride
+- Netlify deploys the `main` branch automatically.
+
 ## Business Model
 
 - Passengers pay drivers directly by cash or transfer.
