@@ -1,4 +1,4 @@
-const CACHE_NAME = "linride-offline-v7";
+const CACHE_NAME = "linride-offline-v8";
 const APP_SHELL = ["/", "/manifest.json", "/icon.svg", "/linride-logo.svg", "/offline.html"];
 
 self.addEventListener("install", (event) => {
@@ -53,5 +53,40 @@ self.addEventListener("fetch", (event) => {
         return response;
       })
       .catch(async () => (await caches.match(event.request)) || Response.error())
+  );
+});
+
+self.addEventListener("push", (event) => {
+  let payload = {};
+  try {
+    payload = event.data ? event.data.json() : {};
+  } catch {
+    payload = { body: event.data?.text() || "Open Lin Ride for an update." };
+  }
+  event.waitUntil(
+    self.registration.showNotification(payload.title || "Lin Ride", {
+      body: payload.body || "Open Lin Ride for an update.",
+      tag: payload.tag || "linride-update",
+      icon: "/icon.svg",
+      badge: "/icon.svg",
+      data: { url: payload.url || "/" },
+      vibrate: [160, 80, 160]
+    })
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const requestedUrl = new URL(event.notification.data?.url || "/", self.location.origin);
+  const targetUrl = requestedUrl.origin === self.location.origin ? requestedUrl.href : self.location.origin;
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(async (windows) => {
+      const existing = windows.find((client) => new URL(client.url).origin === self.location.origin);
+      if (existing) {
+        if ("navigate" in existing) await existing.navigate(targetUrl);
+        return existing.focus();
+      }
+      return self.clients.openWindow(targetUrl);
+    })
   );
 });

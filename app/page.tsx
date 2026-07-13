@@ -1,13 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AdminDashboard } from "@/components/AdminDashboard";
 import { AppShell, AppView, ThemeMode } from "@/components/AppShell";
 import { BusinessDeliveryForm } from "@/components/BusinessDeliveryForm";
 import { DriverMode } from "@/components/DriverMode";
 import { LoadingScreen } from "@/components/LoadingScreen";
+import { NotificationSettings } from "@/components/NotificationSettings";
 import { ProfilePhotoSetup } from "@/components/ProfilePhotoSetup";
 import { RiderHome } from "@/components/RiderHome";
+import { TripCommunicationPanel } from "@/components/TripCommunicationPanel";
 import { WelcomeScreen } from "@/components/WelcomeScreen";
 import {
   createBusinessAccount,
@@ -26,6 +28,7 @@ import {
   fetchDriverEarnings,
   getCurrentProfile,
   fetchPointsAccount,
+  fetchTripParticipantProfile,
   fetchTripHistory,
   ignoreRideRequest,
   ignoreBusinessDelivery,
@@ -73,6 +76,7 @@ import { isMockMode } from "@/lib/appMode";
 import { mockAdminDashboardData, mockBusinessDelivery, mockDrivers, mockRideRequests, mockRider, popularPlaces } from "@/lib/mockData";
 import { getSuggestedFare } from "@/lib/pricing";
 import { reverseGeocodeJamaica } from "@/lib/maps/geoapify";
+import { sendNotificationEvent, showAppNotification } from "@/lib/notifications";
 import {
   distanceBetweenCoordinatesMeters,
   formatLocationAccuracy,
@@ -158,6 +162,7 @@ export default function Home() {
   const [businessDeliveryStatus, setBusinessDeliveryStatus] = useState<BusinessDelivery["status"]>("Pending");
   const [activeRideRequestId, setActiveRideRequestId] = useState<string | null>(null);
   const [activeTrip, setActiveTrip] = useState<TripRecord | null>(null);
+  const [tripRiderProfile, setTripRiderProfile] = useState<Profile | null>(null);
   const [pinMessage, setPinMessage] = useState<string | null>(null);
   const [tripBusy, setTripBusy] = useState(false);
   const [ratedTripIds, setRatedTripIds] = useState<string[]>([]);
@@ -195,6 +200,9 @@ export default function Home() {
     boostTags: [],
     isShared: false
   });
+  const driverRequestIdsRef = useRef<Set<string>>(new Set());
+  const driverRequestsLoadedRef = useRef(false);
+  const previousPassengerTripRef = useRef<{ id: string; status: TripStatus } | null>(null);
 
   const googleVerificationFormUrl = DRIVER_VERIFICATION_FORM_URL;
   const localPreview = isMockMode;
@@ -238,6 +246,21 @@ export default function Home() {
         avatarUrl: profile.avatar_url
       }
     : mockRider;
+  const activeCommunicationTrip = activeTrip && ["accepted", "driver_arriving", "arrived", "in_progress"].includes(activeTrip.status)
+    ? activeTrip
+    : null;
+  const communicationCounterpart = activeCommunicationTrip
+    ? currentView === "rider"
+      ? acceptedDriver?.profile || null
+      : currentView === "driver"
+        ? tripRiderProfile || {
+            id: activeCommunicationTrip.riderId,
+            role: "rider" as const,
+            fullName: "Passenger",
+            phone: ""
+          }
+        : null
+    : null;
   const requiresProfilePhoto = Boolean(
     !localPreview &&
       profile &&
@@ -392,11 +415,31 @@ export default function Home() {
 
   useEffect(() => {
     if (localPreview || currentView !== "driver" || !driverRecord?.id) return;
-    return subscribeToPendingRideRequests(
+    driverRequestIdsRef.current = new Set();
+    driverRequestsLoadedRef.current = false;
+    const unsubscribe = subscribeToPendingRideRequests(
       driverRecord.id,
-      setBackendRideRequests,
+      (requests) => {
+        const incoming = requests.filter((request) => !driverRequestIdsRef.current.has(request.id));
+        driverRequestIdsRef.current = new Set(requests.map((request) => request.id));
+        setBackendRideRequests(requests);
+        if (driverRequestsLoadedRef.current && incoming.length) {
+          const latest = incoming[0];
+          void showAppNotification("New Lin Ride request", {
+            body: `${latest.pickup.name} to ${latest.destination.name} - J$${latest.offeredFareJmd.toLocaleString()}`,
+            tag: `ride-request-${latest.id}`,
+            url: "/?view=driver"
+          });
+        }
+        driverRequestsLoadedRef.current = true;
+      },
       () => setAppMessage("Could not connect to Lin Ride. Check your internet.")
     );
+    return () => {
+      unsubscribe();
+      driverRequestsLoadedRef.current = false;
+      driverRequestIdsRef.current = new Set();
+    };
   }, [currentView, driverRecord?.id, localPreview]);
 
   useEffect(() => {
@@ -432,6 +475,40 @@ export default function Home() {
       .then(setAcceptedDriver)
       .catch(() => setAppMessage("Could not load your assigned driver."));
   }, [activeTrip?.driverId, currentView, localPreview]);
+
+  useEffect(() => {
+    if (localPreview || currentView !== "driver" || !activeTrip?.riderId) {
+      setTripRiderProfile(null);
+      return;
+    }
+    void fetchTripParticipantProfile(activeTrip.riderId)
+      .then(setTripRiderProfile)
+      .catch(() => setTripRiderProfile({ id: activeTrip.riderId, role: "rider", fullName: "Passenger", phone: "" }));
+  }, [activeTrip?.riderId, currentView, localPreview]);
+
+  useEffect(() => {
+    if (localPreview || currentView !== "rider" || !activeTrip) {
+      previousPassengerTripRef.current = null;
+      return;
+    }
+    const previous = previousPassengerTripRef.current;
+    if (previous?.id === activeTrip.id && previous.status !== activeTrip.status) {
+      if (activeTrip.status === "driver_arriving") {
+        void showAppNotification("Your driver is on the way", {
+          body: `${acceptedDriver?.profile.fullName || "Your driver"} is driving to your pickup.`,
+          tag: `trip-status-${activeTrip.id}`,
+          url: "/?view=rider"
+        });
+      } else if (activeTrip.status === "arrived") {
+        void showAppNotification("Your driver is nearby", {
+          body: `${acceptedDriver?.profile.fullName || "Your driver"} has arrived at the pickup point.`,
+          tag: `trip-status-${activeTrip.id}`,
+          url: "/?view=rider"
+        });
+      }
+    }
+    previousPassengerTripRef.current = { id: activeTrip.id, status: activeTrip.status };
+  }, [acceptedDriver?.profile.fullName, activeTrip, currentView, localPreview]);
 
   useEffect(() => {
     if (localPreview || !profile?.id) return;
@@ -856,6 +933,7 @@ export default function Home() {
         returnTrip: draft.returnTrip
       });
       setAppMessage("Nearby drivers are reviewing your offer.");
+      void sendNotificationEvent({ type: "ride_request", rideRequestId: request.id });
       return request.id;
     } catch {
       setAppMessage("Could not connect to Lin Ride. Check your internet.");
@@ -881,6 +959,9 @@ export default function Home() {
           }
         : await updateTripStatus({ tripId: activeTrip.id, status, reason });
       receiveActiveTrip(updated);
+      if (!localPreview && currentView === "driver" && (status === "driver_arriving" || status === "arrived")) {
+        void sendNotificationEvent({ type: "trip_status", tripId: updated.id });
+      }
       setAppMessage(status === "completed" ? "Trip completed." : status === "cancelled" ? "Trip cancelled." : "Trip status updated.");
     } catch (error) {
       setAppMessage(error instanceof Error ? error.message : "Could not update trip. Check your internet.");
@@ -1117,6 +1198,18 @@ export default function Home() {
             setOnline(false);
             setAppMessage("Profile picture removed. Add a new one to continue.");
           }}
+        />
+      )}
+      {!localPreview && profile && !requiresProfilePhoto && (currentView === "rider" || currentView === "driver") && (
+        <NotificationSettings role={currentView} />
+      )}
+      {!localPreview && profile && !requiresProfilePhoto && activeCommunicationTrip && communicationCounterpart && (
+        <TripCommunicationPanel
+          tripId={activeCommunicationTrip.id}
+          currentUserId={profile.id}
+          counterpartUserId={communicationCounterpart.id}
+          counterpartName={communicationCounterpart.fullName}
+          counterpartAvatarUrl={communicationCounterpart.avatarUrl}
         />
       )}
       {!requiresProfilePhoto && currentView === "rider" && (

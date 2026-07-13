@@ -15,6 +15,7 @@ import {
   PaymentMethod,
   PassengerWithdrawalRequest,
   Place,
+  Profile,
   PointsRuleSettings,
   PointsTransaction,
   PointsWallet,
@@ -23,6 +24,9 @@ import {
   ServiceType,
   SupportTicket,
   TripProofPhoto,
+  TripCallSignal,
+  TripCallSignalType,
+  TripMessage,
   TripRating,
   TripRecord,
   TripStatus,
@@ -127,6 +131,29 @@ function mapTripRow(row: any): TripRecord {
     destinationName: request?.destination_name,
     serviceType: request?.service_type,
     updatedAt: row.updated_at,
+    createdAt: row.created_at
+  };
+}
+
+function mapTripMessageRow(row: any): TripMessage {
+  return {
+    id: row.id,
+    tripId: row.trip_id,
+    senderId: row.sender_id,
+    body: row.body,
+    createdAt: row.created_at
+  };
+}
+
+function mapTripCallSignalRow(row: any): TripCallSignal {
+  return {
+    id: row.id,
+    callId: row.call_id,
+    tripId: row.trip_id,
+    senderId: row.sender_id,
+    recipientId: row.recipient_id,
+    signalType: row.signal_type as TripCallSignalType,
+    payload: row.payload || {},
     createdAt: row.created_at
   };
 }
@@ -1377,6 +1404,154 @@ export function subscribeToActiveTripForRider(riderId: string, onChange: (trip: 
 
 export function subscribeToActiveTripForDriver(driverId: string, onChange: (trip: TripRecord | null) => void, onError?: () => void) {
   return subscribeToActiveTrip("driver_id", driverId, onChange, onError);
+}
+
+export async function fetchTripParticipantProfile(profileId: string): Promise<Profile> {
+  const client = requireSupabase();
+  const { data, error } = await client
+    .from("profiles")
+    .select("id,role,full_name,phone,avatar_url")
+    .eq("id", profileId)
+    .single();
+  if (error) throw new Error(friendlyBackendMessage(error, "Could not load the trip participant."));
+  return {
+    id: data.id,
+    role: data.role as Role,
+    fullName: data.full_name || (data.role === "driver" ? "Driver" : "Passenger"),
+    phone: data.phone || "",
+    avatarUrl: data.avatar_url || undefined
+  };
+}
+
+export async function fetchTripMessages(tripId: string): Promise<TripMessage[]> {
+  const client = requireSupabase();
+  const { data, error } = await client
+    .from("trip_messages")
+    .select("id,trip_id,sender_id,body,created_at")
+    .eq("trip_id", tripId)
+    .order("created_at", { ascending: true })
+    .limit(200);
+  if (error) throw new Error(friendlyBackendMessage(error, "Could not load trip messages."));
+  return (data || []).map(mapTripMessageRow);
+}
+
+export async function sendTripMessage(params: { tripId: string; senderId: string; body: string }) {
+  const client = requireSupabase();
+  const body = params.body.trim();
+  if (!body) throw new Error("Enter a message first.");
+  if (body.length > 1000) throw new Error("Messages can be up to 1,000 characters.");
+  const { data, error } = await client
+    .from("trip_messages")
+    .insert({ trip_id: params.tripId, sender_id: params.senderId, body })
+    .select("id,trip_id,sender_id,body,created_at")
+    .single();
+  if (error) throw new Error(friendlyBackendMessage(error, "Message could not be sent."));
+  return mapTripMessageRow(data);
+}
+
+export function subscribeToTripMessages(
+  tripId: string,
+  onChange: (messages: TripMessage[]) => void,
+  onError?: () => void
+) {
+  const client = requireSupabase();
+  const refresh = () => void fetchTripMessages(tripId).then(onChange).catch(onError);
+  const channel = client
+    .channel(`trip-messages:${tripId}`)
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "trip_messages", filter: `trip_id=eq.${tripId}` },
+      refresh
+    )
+    .subscribe();
+  refresh();
+  return () => void client.removeChannel(channel);
+}
+
+export async function fetchRecentTripCallSignals(tripId: string): Promise<TripCallSignal[]> {
+  const client = requireSupabase();
+  const since = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+  const { data, error } = await client
+    .from("trip_call_signals")
+    .select("id,call_id,trip_id,sender_id,recipient_id,signal_type,payload,created_at")
+    .eq("trip_id", tripId)
+    .gte("created_at", since)
+    .order("created_at", { ascending: true })
+    .limit(250);
+  if (error) throw new Error(friendlyBackendMessage(error, "Could not connect the audio call."));
+  return (data || []).map(mapTripCallSignalRow);
+}
+
+export async function sendTripCallSignal(params: {
+  callId: string;
+  tripId: string;
+  senderId: string;
+  recipientId: string;
+  signalType: TripCallSignalType;
+  payload?: Record<string, unknown>;
+}) {
+  const client = requireSupabase();
+  const { data, error } = await client
+    .from("trip_call_signals")
+    .insert({
+      call_id: params.callId,
+      trip_id: params.tripId,
+      sender_id: params.senderId,
+      recipient_id: params.recipientId,
+      signal_type: params.signalType,
+      payload: params.payload || {}
+    })
+    .select("id,call_id,trip_id,sender_id,recipient_id,signal_type,payload,created_at")
+    .single();
+  if (error) throw new Error(friendlyBackendMessage(error, "Could not connect the audio call."));
+  return mapTripCallSignalRow(data);
+}
+
+export function subscribeToTripCallSignals(
+  tripId: string,
+  onSignal: (signal: TripCallSignal) => void,
+  onError?: () => void
+) {
+  const client = requireSupabase();
+  const delivered = new Set<string>();
+  const deliver = (signal: TripCallSignal) => {
+    if (delivered.has(signal.id)) return;
+    delivered.add(signal.id);
+    onSignal(signal);
+  };
+  const channel = client
+    .channel(`trip-call-signals:${tripId}`)
+    .on(
+      "postgres_changes",
+      { event: "INSERT", schema: "public", table: "trip_call_signals", filter: `trip_id=eq.${tripId}` },
+      (payload) => deliver(mapTripCallSignalRow(payload.new))
+    )
+    .subscribe();
+  void fetchRecentTripCallSignals(tripId).then((signals) => signals.forEach(deliver)).catch(onError);
+  return () => void client.removeChannel(channel);
+}
+
+export async function registerPushSubscription(params: {
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+  userAgent?: string;
+}) {
+  const client = requireSupabase();
+  const { data, error } = await client.rpc("register_push_subscription", {
+    p_endpoint: params.endpoint,
+    p_p256dh: params.p256dh,
+    p_auth: params.auth,
+    p_user_agent: params.userAgent || null
+  });
+  if (error) throw new Error(friendlyBackendMessage(error, "Phone alerts could not be enabled."));
+  return data as string;
+}
+
+export async function unregisterPushSubscription(endpoint: string) {
+  const client = requireSupabase();
+  const { error } = await client.rpc("unregister_push_subscription", { p_endpoint: endpoint });
+  if (error) throw new Error(friendlyBackendMessage(error, "Phone alerts could not be disabled."));
 }
 
 export async function fetchTripHistory(params: { riderId?: string; driverId?: string; limit?: number }) {

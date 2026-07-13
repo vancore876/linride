@@ -166,6 +166,27 @@ export type TripRecord = {
   createdAt?: string;
 };
 
+export type TripMessage = {
+  id: string;
+  tripId: string;
+  senderId: string;
+  body: string;
+  createdAt: string;
+};
+
+export type TripCallSignalType = "offer" | "answer" | "ice" | "decline" | "hangup";
+
+export type TripCallSignal = {
+  id: string;
+  callId: string;
+  tripId: string;
+  senderId: string;
+  recipientId: string;
+  signalType: TripCallSignalType;
+  payload: Record<string, unknown>;
+  createdAt: string;
+};
+
 export type RideRequestDraft = {
   pickup: Place;
   destination: Place;
