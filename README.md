@@ -213,6 +213,7 @@ Google Forms does not automatically write its file records into Supabase in this
 ### Driver
 
 - [ ] Sign up as a driver and upload a profile photo.
+- [ ] Replace and remove the profile photo; confirm removal blocks Online until a new photo is saved.
 - [ ] Confirm Online is blocked while account approval, required documents, or weekly pass is missing.
 - [ ] Submit the Google verification form and mark it submitted.
 - [ ] Confirm pending and rejected document messages, then confirm the card disappears after approval.
@@ -231,6 +232,7 @@ Google Forms does not automatically write its file records into Supabase in this
 ### Passenger
 
 - [ ] Sign up as a passenger and upload a profile photo.
+- [ ] Replace and remove the profile photo; confirm removal blocks booking until a new photo is saved.
 - [ ] Search a Jamaica address and select a result.
 - [ ] Use current location and confirm the GPS accuracy message and pickup pin.
 - [ ] Drag pickup and destination pins and confirm the road route recalculates.

@@ -470,6 +470,13 @@ export async function uploadProfilePhoto(userId: string, file: File) {
   const extensionByType: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
   const extension = extensionByType[file.type] || file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
   const path = `${auth.user.id}/profile-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${extension}`;
+  const { data: existingProfile, error: existingProfileError } = await client
+    .from("profiles")
+    .select("avatar_url")
+    .eq("id", auth.user.id)
+    .maybeSingle();
+  if (existingProfileError) throw new Error("Your current profile photo could not be checked. Try again.");
+
   const upload = await client.storage.from("profile-photos").upload(path, file, {
     upsert: false,
     contentType: file.type,
@@ -498,7 +505,58 @@ export async function uploadProfilePhoto(userId: string, file: File) {
     await client.storage.from("profile-photos").remove([path]);
     throw new Error(error?.message || "The profile could not be updated with this photo.");
   }
+
+  const previousPath = ownedProfilePhotoPath(existingProfile?.avatar_url, auth.user.id);
+  if (previousPath && previousPath !== path) {
+    await client.storage.from("profile-photos").remove([previousPath]).catch(() => undefined);
+  }
   return updatedProfile.avatar_url;
+}
+
+function ownedProfilePhotoPath(photoUrl: string | null | undefined, userId: string) {
+  if (!photoUrl) return null;
+  const marker = "/storage/v1/object/public/profile-photos/";
+  try {
+    const pathname = new URL(photoUrl).pathname;
+    const markerIndex = pathname.indexOf(marker);
+    if (markerIndex < 0) return null;
+    const path = decodeURIComponent(pathname.slice(markerIndex + marker.length));
+    return path.startsWith(`${userId}/`) ? path : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function removeProfilePhoto(userId: string) {
+  const client = requireSupabase();
+  const { data: auth, error: authError } = await client.auth.getUser();
+  if (authError || !auth.user) throw new Error("Your sign-in expired. Sign out, sign in again, then retry.");
+  if (auth.user.id !== userId) throw new Error("This photo does not match the signed-in account. Sign in again and retry.");
+
+  const { data: currentProfile, error: profileError } = await client
+    .from("profiles")
+    .select("avatar_url")
+    .eq("id", auth.user.id)
+    .maybeSingle();
+  if (profileError || !currentProfile) throw new Error("Your profile photo could not be loaded. Try again.");
+
+  const path = ownedProfilePhotoPath(currentProfile.avatar_url, auth.user.id);
+  if (path) {
+    const removed = await client.storage.from("profile-photos").remove([path]);
+    if (removed.error) {
+      const detail = removed.error.message.toLowerCase();
+      if (detail.includes("row-level security") || detail.includes("unauthorized")) {
+        throw new Error("Photo permission expired. Sign out, sign in again, then retry.");
+      }
+      throw new Error(`Photo removal failed: ${removed.error.message}`);
+    }
+  }
+
+  const { error } = await client
+    .from("profiles")
+    .update({ avatar_url: null })
+    .eq("id", auth.user.id);
+  if (error) throw new Error("The photo was removed, but your profile could not be refreshed. Reload and try again.");
 }
 
 export async function uploadDriverDocument(params: {

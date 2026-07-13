@@ -31,6 +31,7 @@ import {
   ignoreBusinessDelivery,
   insertDriverOffer,
   rejectDriverPayment,
+  removeProfilePhoto,
   reviewDriverDocument,
   markDriverDocumentsSubmitted,
   subscribeToBusinessDeliveries,
@@ -1095,10 +1096,11 @@ export default function Home() {
       journey={journey}
     >
       {appMessage && <div className="app-message-banner" role="status">{appMessage}</div>}
-      {requiresProfilePhoto && profile && (
+      {!localPreview && profile && (currentView === "rider" || currentView === "driver") && (
         <ProfilePhotoSetup
           fullName={profile.full_name || (profile.role === "driver" ? "Driver" : "Passenger")}
           role={currentView === "driver" ? "driver" : profile.role}
+          currentPhotoUrl={profile.avatar_url}
           onUpload={async (file) => {
             const avatarUrl = await uploadProfilePhoto(profile.id, file);
             setProfile((current) => (current ? { ...current, avatar_url: avatarUrl } : current));
@@ -1107,6 +1109,13 @@ export default function Home() {
             if (driverRecord?.id) {
               void fetchDriverAccount(driverRecord.id).then(setDriverAccount).catch(() => undefined);
             }
+          }}
+          onRemove={async () => {
+            await removeProfilePhoto(profile.id);
+            setProfile((current) => (current ? { ...current, avatar_url: undefined } : current));
+            setDriverAccount((current) => current ? { ...current, profile: { ...current.profile, avatarUrl: undefined } } : current);
+            setOnline(false);
+            setAppMessage("Profile picture removed. Add a new one to continue.");
           }}
         />
       )}

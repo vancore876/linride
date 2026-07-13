@@ -1,6 +1,6 @@
 "use client";
 
-import { Camera, CheckCircle2, Images, LoaderCircle, Upload } from "lucide-react";
+import { Camera, CheckCircle2, Images, LoaderCircle, Trash2, Upload } from "lucide-react";
 import Image from "next/image";
 import { ChangeEvent, useEffect, useState } from "react";
 import { Role } from "@/types/linride";
@@ -8,7 +8,9 @@ import { Role } from "@/types/linride";
 type ProfilePhotoSetupProps = {
   fullName: string;
   role: Role;
+  currentPhotoUrl?: string;
   onUpload: (file: File) => Promise<void>;
+  onRemove?: () => Promise<void>;
 };
 
 const MAX_SOURCE_BYTES = 25 * 1024 * 1024;
@@ -53,7 +55,7 @@ async function prepareProfilePhoto(source: File) {
   return new File([blob], `profile-${Date.now()}.jpg`, { type: "image/jpeg", lastModified: Date.now() });
 }
 
-export function ProfilePhotoSetup({ fullName, role, onUpload }: ProfilePhotoSetupProps) {
+export function ProfilePhotoSetup({ fullName, role, currentPhotoUrl, onUpload, onRemove }: ProfilePhotoSetupProps) {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [preparing, setPreparing] = useState(false);
@@ -84,6 +86,82 @@ export function ProfilePhotoSetup({ fullName, role, onUpload }: ProfilePhotoSetu
     } finally {
       setPreparing(false);
     }
+  }
+
+  async function savePhoto() {
+    if (!file) return;
+    setBusy(true);
+    setMessage(null);
+    try {
+      await onUpload(file);
+      setFile(null);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Profile photo upload failed.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (currentPhotoUrl) {
+    return (
+      <section className="profile-photo-gate profile-photo-manager">
+        <div className="profile-photo-manager-summary">
+          <div className="profile-photo-gate-icon">
+            <Image
+              unoptimized
+              width={72}
+              height={72}
+              src={preview || currentPhotoUrl}
+              alt={preview ? "New profile preview" : `${fullName} profile`}
+            />
+          </div>
+          <div>
+            <p className="linride-eyebrow">Profile picture</p>
+            <h2>{preview ? "Ready to replace" : fullName}</h2>
+            <p>{preview ? "Save this picture to use it across Lin Ride." : "Keep this photo clear and current."}</p>
+          </div>
+        </div>
+
+        <div className="profile-photo-manager-actions">
+          <label className="profile-photo-picker">
+            <Images size={17} />
+            <span>Replace photo</span>
+            <input type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" onChange={choosePhoto} disabled={preparing || busy} />
+          </label>
+          <button
+            type="button"
+            className="profile-photo-remove"
+            disabled={preparing || busy || !onRemove}
+            onClick={async () => {
+              if (!onRemove || !window.confirm("Remove your profile picture? You will need to add a new one before booking or going online.")) return;
+              setBusy(true);
+              setMessage(null);
+              try {
+                await onRemove();
+                setFile(null);
+              } catch (error) {
+                setMessage(error instanceof Error ? error.message : "Profile photo removal failed.");
+              } finally {
+                setBusy(false);
+              }
+            }}
+          >
+            {busy && !file ? <LoaderCircle size={17} className="profile-photo-spinner" /> : <Trash2 size={17} />}
+            Remove photo
+          </button>
+        </div>
+
+        {preparing && <p className="profile-photo-ready"><LoaderCircle size={15} className="profile-photo-spinner" /> Preparing photo...</p>}
+        {file && !message && <p className="profile-photo-ready"><CheckCircle2 size={15} /> New photo ready</p>}
+        {message && <p className="profile-photo-message" role="alert">{message}</p>}
+        {file && (
+          <button type="button" className="linride-submit profile-photo-save-replacement" disabled={preparing || busy} onClick={() => void savePhoto()}>
+            {busy ? <LoaderCircle size={18} className="profile-photo-spinner mr-2 inline" /> : <Upload size={18} className="mr-2 inline" />}
+            {busy ? "Saving photo..." : "Save new profile picture"}
+          </button>
+        )}
+      </section>
+    );
   }
 
   return (
@@ -120,18 +198,7 @@ export function ProfilePhotoSetup({ fullName, role, onUpload }: ProfilePhotoSetu
         type="button"
         className="linride-submit"
         disabled={!file || preparing || busy}
-        onClick={async () => {
-          if (!file) return;
-          setBusy(true);
-          setMessage(null);
-          try {
-            await onUpload(file);
-          } catch (error) {
-            setMessage(error instanceof Error ? error.message : "Profile photo upload failed.");
-          } finally {
-            setBusy(false);
-          }
-        }}
+        onClick={() => void savePhoto()}
       >
         {busy ? <LoaderCircle size={18} className="profile-photo-spinner mr-2 inline" /> : <Upload size={18} className="mr-2 inline" />}
         {busy ? "Uploading photo..." : "Save profile picture"}
