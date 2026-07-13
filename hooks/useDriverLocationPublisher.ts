@@ -29,6 +29,7 @@ function headingBetween(previous: LastPosition, latitude: number, longitude: num
 export function useDriverLocationPublisher(driverId: string | undefined, online: boolean) {
   const [status, setStatus] = useState<"idle" | "tracking" | "denied" | "unavailable" | "error">("idle");
   const [message, setMessage] = useState<string | null>(null);
+  const [lastPublishedAt, setLastPublishedAt] = useState<number | null>(null);
 
   useEffect(() => {
     const client = supabase;
@@ -73,6 +74,7 @@ export function useDriverLocationPublisher(driverId: string | undefined, online:
         return;
       }
       last = { latitude, longitude, sentAt: now };
+      setLastPublishedAt(now);
       setStatus("tracking");
       setMessage("Live GPS is updating for nearby passengers.");
     };
@@ -104,5 +106,5 @@ export function useDriverLocationPublisher(driverId: string | undefined, online:
     };
   }, [driverId, online]);
 
-  return { status, message };
+  return { status, message, lastPublishedAt };
 }

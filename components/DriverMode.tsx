@@ -17,6 +17,7 @@ import { WeeklyPassAgreement } from "@/components/WeeklyPassAgreement";
 import { DRIVER_WEEKLY_PASS_JMD } from "@/lib/driverPricing";
 import { mockDriverEarningsBalanceJmd, mockDriverWithdrawalRequests } from "@/lib/mockData";
 import { useDriverLocationPublisher } from "@/hooks/useDriverLocationPublisher";
+import { sendNotificationEvent } from "@/lib/notifications";
 import {
   BusinessDelivery,
   Driver,
@@ -116,6 +117,12 @@ export function DriverMode({
   useEffect(() => {
     if (["denied", "unavailable"].includes(liveLocation.status) && online) onOnlineChange(false);
   }, [liveLocation.status, onOnlineChange, online]);
+
+  useEffect(() => {
+    if (!online || liveLocation.status !== "tracking" || !liveLocation.lastPublishedAt) return;
+    if (!activeTrip || activeTrip.status !== "driver_arriving") return;
+    void sendNotificationEvent({ type: "driver_near", tripId: activeTrip.id });
+  }, [activeTrip, liveLocation.lastPublishedAt, liveLocation.status, online]);
 
   useEffect(() => {
     if (subscriptionStatus === "pending") setShowPayment(true);

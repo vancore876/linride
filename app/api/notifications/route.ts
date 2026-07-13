@@ -162,6 +162,63 @@ async function prepareTripStatus(event: Extract<NotificationEvent, { type: "trip
   };
 }
 
+function distanceBetweenMeters(lat1: number, lng1: number, lat2: number, lng2: number) {
+  const toRadians = (degrees: number) => (degrees * Math.PI) / 180;
+  const latDelta = toRadians(lat2 - lat1);
+  const lngDelta = toRadians(lng2 - lng1);
+  const a =
+    Math.sin(latDelta / 2) ** 2 +
+    Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) * Math.sin(lngDelta / 2) ** 2;
+  return 6371000 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+async function prepareDriverNear(event: Extract<NotificationEvent, { type: "driver_near" }>, actorId: string) {
+  const result = await database().query<{
+    id: string;
+    status: string;
+    rider_id: string;
+    driver_user_id: string;
+    driver_name: string | null;
+    pickup_lat: string | number | null;
+    pickup_lng: string | number | null;
+    driver_lat: string | number | null;
+    driver_lng: string | number | null;
+    location_updated_at: Date | string | null;
+    is_online: boolean;
+  }>(
+    `select trip.id, trip.status, trip.rider_id, driver.user_id as driver_user_id,
+            profile.full_name as driver_name, ride.pickup_lat, ride.pickup_lng,
+            location.lat as driver_lat, location.lng as driver_lng,
+            location.updated_at as location_updated_at, location.is_online
+     from public.trips trip
+     join public.drivers driver on driver.id = trip.driver_id
+     join public.profiles profile on profile.id = driver.user_id
+     join public.ride_requests ride on ride.id = trip.ride_request_id
+     join public.driver_locations location on location.driver_id = driver.id
+     where trip.id = $1`,
+    [event.tripId]
+  );
+  const trip = result.rows[0];
+  if (!trip || trip.driver_user_id !== actorId || trip.status !== "driver_arriving" || !trip.is_online) return null;
+
+  const coordinates = [trip.pickup_lat, trip.pickup_lng, trip.driver_lat, trip.driver_lng].map(Number);
+  if (coordinates.some((coordinate) => !Number.isFinite(coordinate))) return null;
+  const locationAge = trip.location_updated_at ? Date.now() - new Date(trip.location_updated_at).getTime() : Number.POSITIVE_INFINITY;
+  if (locationAge < 0 || locationAge > 2 * 60_000) return null;
+  if (distanceBetweenMeters(coordinates[0], coordinates[1], coordinates[2], coordinates[3]) > 500) return null;
+  if (!await reserveEvent(`driver-near:${trip.id}`, actorId)) return { duplicate: true as const };
+
+  return {
+    userIds: [trip.rider_id],
+    payload: {
+      title: "Your driver is nearby",
+      body: `${trip.driver_name || "Your driver"} is less than 500 metres from your pickup.`,
+      tag: `driver-near-${trip.id}`,
+      url: "/?view=rider"
+    }
+  };
+}
+
 async function prepareMessage(event: Extract<NotificationEvent, { type: "message" }>, actorId: string) {
   const result = await database().query<{
     id: string; body: string; sender_id: string; sender_name: string | null; rider_id: string; driver_user_id: string;
@@ -242,6 +299,8 @@ export async function POST(request: NextRequest) {
       ? await prepareRideRequest(event, user.id)
       : event.type === "trip_status"
         ? await prepareTripStatus(event, user.id)
+        : event.type === "driver_near"
+          ? await prepareDriverNear(event, user.id)
         : event.type === "message"
           ? await prepareMessage(event, user.id)
           : event.type === "call"

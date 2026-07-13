@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 export type NotificationEvent =
   | { type: "ride_request"; rideRequestId: string }
   | { type: "trip_status"; tripId: string }
+  | { type: "driver_near"; tripId: string }
   | { type: "message"; messageId: string }
   | { type: "call"; signalId: string };
 
