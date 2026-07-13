@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lin Ride social creative</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+    body {
+      --green: #39c52a;
+      --green-dark: #176f17;
+      --ink: #09130d;
+      --paper: #f8fff9;
+      --muted: #d9eadb;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: Arial, Helvetica, sans-serif;
+    }
+    .creative {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      isolation: isolate;
+      overflow: hidden;
+      background: var(--paper);
+    }
+    .green-band {
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 56%;
+      background: var(--green);
+      z-index: -3;
+    }
+    .road-line {
+      position: absolute;
+      width: 52%;
+      height: 16px;
+      background: var(--ink);
+      opacity: 0.08;
+      transform: rotate(-18deg);
+      z-index: -2;
+    }
+    .road-line.one { left: -8%; top: 18%; }
+    .road-line.two { left: 16%; top: 88%; width: 40%; }
+    .content {
+      position: absolute;
+      inset: 58px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(340px, 0.9fr);
+      gap: 46px;
+      align-items: center;
+    }
+    .copy { align-self: stretch; display: flex; flex-direction: column; justify-content: center; }
+    .logo-wrap {
+      width: 390px;
+      max-width: 80%;
+      margin-bottom: 44px;
+    }
+    .logo-wrap img { display: block; width: 100%; height: auto; }
+    .eyebrow {
+      width: fit-content;
+      margin: 0 0 20px;
+      padding: 11px 16px;
+      border: 3px solid var(--ink);
+      background: var(--paper);
+      font-size: 20px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    h1 {
+      max-width: 650px;
+      margin: 0;
+      font-size: 76px;
+      line-height: 0.94;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+    .support {
+      max-width: 570px;
+      margin: 28px 0 0;
+      font-size: 30px;
+      line-height: 1.2;
+      font-weight: 800;
+    }
+    .points {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 26px;
+    }
+    .point {
+      padding: 11px 14px;
+      background: var(--ink);
+      color: white;
+      font-size: 18px;
+      font-weight: 900;
+    }
+    .cta {
+      width: fit-content;
+      margin-top: 34px;
+      padding: 17px 23px;
+      background: var(--paper);
+      border: 4px solid var(--ink);
+      box-shadow: 9px 9px 0 var(--ink);
+      font-size: 21px;
+      font-weight: 900;
+    }
+    .cta small { display: block; margin-top: 5px; font-size: 15px; font-weight: 800; }
+    .device-column { display: flex; align-items: center; justify-content: center; }
+    .device {
+      position: relative;
+      width: 390px;
+      height: 760px;
+      padding: 18px;
+      border: 8px solid var(--ink);
+      border-radius: 38px;
+      background: var(--ink);
+      box-shadow: 22px 22px 0 rgba(9, 19, 13, 0.16);
+      transform: rotate(2deg);
+    }
+    .device::before {
+      content: "";
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      width: 105px;
+      height: 12px;
+      transform: translateX(-50%);
+      border-radius: 0 0 8px 8px;
+      background: var(--ink);
+      z-index: 2;
+    }
+    .device img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top center;
+      border-radius: 16px;
+      background: white;
+    }
+    .community {
+      position: absolute;
+      right: 38px;
+      bottom: 28px;
+      font-size: 15px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    body.story .green-band { width: 100%; height: 61%; }
+    body.story .content {
+      inset: 78px 70px;
+      display: flex;
+      flex-direction: column;
+      gap: 44px;
+      align-items: stretch;
+    }
+    body.story .copy { display: block; }
+    body.story .logo-wrap { width: 520px; margin-bottom: 70px; }
+    body.story h1 { max-width: 930px; font-size: 116px; }
+    body.story .support { max-width: 870px; font-size: 42px; }
+    body.story .point { font-size: 24px; padding: 14px 18px; }
+    body.story .cta { font-size: 28px; padding: 22px 28px; }
+    body.story .cta small { font-size: 19px; }
+    body.story .device-column { flex: 1; align-items: flex-end; }
+    body.story .device { width: 650px; height: 850px; transform: rotate(0); }
+    body.story .community { bottom: 22px; }
+
+    body.share .content {
+      inset: 34px 48px;
+      grid-template-columns: minmax(0, 1.5fr) 300px;
+      gap: 34px;
+    }
+    body.share .green-band { width: 67%; }
+    body.share .logo-wrap { width: 300px; margin-bottom: 26px; }
+    body.share .eyebrow { margin-bottom: 14px; padding: 8px 12px; font-size: 15px; border-width: 2px; }
+    body.share h1 { max-width: 720px; font-size: 62px; }
+    body.share .support { max-width: 670px; margin-top: 18px; font-size: 24px; }
+    body.share .points { margin-top: 18px; }
+    body.share .point { padding: 8px 11px; font-size: 14px; }
+    body.share .cta { margin-top: 22px; padding: 11px 15px; border-width: 3px; box-shadow: 6px 6px 0 var(--ink); font-size: 16px; }
+    body.share .cta small { font-size: 12px; }
+    body.share .device { width: 285px; height: 550px; padding: 12px; border-width: 6px; border-radius: 28px; }
+    body.share .community { display: none; }
+  </style>
+</head>
+<body>
+  <main class="creative">
+    <div class="green-band"></div>
+    <div class="road-line one"></div>
+    <div class="road-line two"></div>
+    <div class="content">
+      <section class="copy">
+        <div class="logo-wrap"><img src="../../public/linride-logo.svg" alt="Lin Ride" /></div>
+        <p class="eyebrow" id="eyebrow"></p>
+        <h1 id="headline"></h1>
+        <p class="support" id="support"></p>
+        <div class="points" id="points"></div>
+        <div class="cta">OPEN LIN RIDE<small>linride-jamaica.netlify.app</small></div>
+      </section>
+      <section class="device-column">
+        <div class="device"><img src="app-preview.png" alt="Lin Ride app" /></div>
+      </section>
+    </div>
+    <p class="community">Built for Linstead and nearby Jamaican communities</p>
+  </main>
+  <script>
+    const campaigns = {
+      passenger: {
+        format: "square",
+        eyebrow: "Passengers",
+        headline: "Local rides. Better experience.",
+        support: "Book rides, errands, shopping pickups and deliveries from one local app.",
+        points: ["Choose your driver", "Real trip distance", "Chat in the app"]
+      },
+      driver: {
+        format: "square",
+        eyebrow: "Drivers / Riders",
+        headline: "Keep 100% of your fares.",
+        support: "Find nearby jobs and build your weekly earnings with Lin Ride.",
+        points: ["J$2,000 weekly pass", "No fare commission", "Local requests"]
+      },
+      business: {
+        format: "square",
+        eyebrow: "Local businesses",
+        headline: "Delivery without the runaround.",
+        support: "Request pickups and local deliveries, choose a driver, and follow each job.",
+        points: ["Local drivers", "Delivery updates", "Proof photos"]
+      },
+      story: {
+        format: "story",
+        eyebrow: "Now serving local communities",
+        headline: "Linstead, let's ride.",
+        support: "Rides. Errands. Deliveries. One local app.",
+        points: ["Passengers", "Drivers", "Businesses"]
+      },
+      share: {
+        format: "share",
+        eyebrow: "Built for country areas in Jamaica",
+        headline: "Ride better. Arrive together.",
+        support: "Local rides, errands and delivery for passengers, drivers and businesses.",
+        points: ["Book locally", "Choose your driver", "Keep connected"]
+      }
+    };
+    const key = new URLSearchParams(window.location.search).get("creative") || "passenger";
+    const campaign = campaigns[key] || campaigns.passenger;
+    document.body.className = campaign.format;
+    document.getElementById("eyebrow").textContent = campaign.eyebrow;
+    document.getElementById("headline").textContent = campaign.headline;
+    document.getElementById("support").textContent = campaign.support;
+    document.getElementById("points").innerHTML = campaign.points.map((point) => `<span class="point">${point}</span>`).join("");
+  </script>
+</body>
+</html>

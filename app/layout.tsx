@@ -4,11 +4,26 @@ import "./globals.css";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://linride-jamaica.netlify.app"),
   title: "Lin Ride",
   description: "Ride, delivery, and errand web app for country communities in Jamaica.",
   applicationName: "Lin Ride",
   manifest: "/manifest.json",
   icons: { icon: "/icon.svg", apple: "/icon.svg" },
+  openGraph: {
+    type: "website",
+    url: "/",
+    siteName: "Lin Ride",
+    title: "Lin Ride | Ride better. Arrive together.",
+    description: "Local rides, errands, and delivery for passengers, drivers, and businesses in Jamaica.",
+    images: [{ url: "/linride-social-share.png", width: 1200, height: 630, alt: "Lin Ride local ride and delivery app" }]
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Lin Ride | Ride better. Arrive together.",
+    description: "Local rides, errands, and delivery for passengers, drivers, and businesses in Jamaica.",
+    images: ["/linride-social-share.png"]
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
