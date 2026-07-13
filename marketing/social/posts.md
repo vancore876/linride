@@ -2,6 +2,8 @@
 
 Website: https://linride-jamaica.netlify.app
 
+TikTok: https://www.tiktok.com/@hustleosja
+
 Use the matching image in this folder with each post. Keep the website link near the beginning on Facebook and WhatsApp. On Instagram and TikTok, place it in the profile bio and say "link in bio."
 
 ## Passenger Launch Post

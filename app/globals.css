@@ -122,6 +122,8 @@ h4,
 
 .linride-top-actions {
   display: flex;
+  min-width: 0;
+  max-width: 100%;
   flex-wrap: wrap;
   gap: 8px;
 }
@@ -597,6 +599,21 @@ h4,
 }
 
 @media (max-width: 560px) {
+  .linride-top-actions {
+    width: 100%;
+  }
+
+  .linride-chip,
+  .linride-hero > * {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .linride-headline,
+  .linride-sub {
+    overflow-wrap: anywhere;
+  }
+
   .linride-row-2,
   .linride-stat-grid {
     grid-template-columns: 1fr;

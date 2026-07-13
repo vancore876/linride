@@ -1,5 +1,6 @@
-import { BriefcaseBusiness, Car, LogOut, Moon, ShieldCheck, Sun, UserRound, Wifi } from "lucide-react";
+import { BriefcaseBusiness, Car, LogOut, Moon, ShieldCheck, Sun, UserRound, Video, Wifi } from "lucide-react";
 import { JourneyProgress, JourneyProgressData } from "@/components/JourneyProgress";
+import { LINRIDE_TIKTOK } from "@/lib/social";
 
 export type AppView = "rider" | "driver" | "business" | "admin";
 export type ThemeMode = "dark" | "light";
@@ -66,6 +67,9 @@ export function AppShell({
           })}
           </nav>
           <div className="app-sidebar-footer">
+            <a href={LINRIDE_TIKTOK.url} target="_blank" rel="noreferrer" className="app-role-link">
+              <Video size={19} /> TikTok {LINRIDE_TIKTOK.handle}
+            </a>
             <button type="button" onClick={onToggleTheme} className="app-role-link" aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}>
               <ThemeIcon size={19} /> {theme === "dark" ? "Light mode" : "Dark mode"}
             </button>

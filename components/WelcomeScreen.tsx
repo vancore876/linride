@@ -1,5 +1,6 @@
-import { ArrowLeft, BriefcaseBusiness, Car, CheckCircle2, MapPinned, Moon, Sun, UserRound } from "lucide-react";
+import { ArrowLeft, BriefcaseBusiness, Car, CheckCircle2, MapPinned, Moon, Sun, UserRound, Video } from "lucide-react";
 import { useMemo, useState } from "react";
+import { LINRIDE_TIKTOK } from "@/lib/social";
 import { Role } from "@/types/linride";
 
 type AuthMode = "signup" | "signin";
@@ -216,6 +217,15 @@ export function WelcomeScreen({ onChooseRole, message, theme, onToggleTheme }: W
           <div className="linride-top-actions">
             <div className="linride-chip">Web App</div>
             <div className="linride-chip">Jamaica</div>
+            <a
+              href={LINRIDE_TIKTOK.url}
+              target="_blank"
+              rel="noreferrer"
+              className="linride-chip"
+              aria-label={`Open Lin Ride on TikTok ${LINRIDE_TIKTOK.handle}`}
+            >
+              <Video size={15} /> TikTok {LINRIDE_TIKTOK.handle}
+            </a>
             <button
               type="button"
               onClick={onToggleTheme}
