@@ -68,6 +68,8 @@ import {
   reviewPassengerWithdrawal,
   updateReportStatus,
   updatePointsRules,
+  restoreSignedInProfile,
+  signInWithGoogle,
   signInWithProfile,
   signOutCurrentUser,
   signUpWithProfile
@@ -142,8 +144,20 @@ const EMPTY_DRIVER_EARNINGS: DriverEarningsSummary = {
   completedTrips: []
 };
 
+type AuthenticatedAccount = {
+  user: { id: string };
+  profile: {
+    id: string;
+    role: Role;
+    full_name?: string | null;
+    phone?: string | null;
+    avatar_url?: string | null;
+  };
+};
+
 export default function Home() {
   const [bootComplete, setBootComplete] = useState(false);
+  const [authRestoreComplete, setAuthRestoreComplete] = useState(isMockMode);
   const [mode, setMode] = useState<AppMode>("welcome");
   const [currentView, setCurrentView] = useState<AppView>("rider");
   const [rideStatus, setRideStatus] = useState<RideStatus>("pending");
@@ -232,6 +246,43 @@ export default function Home() {
     points: trip.status === "completed" ? 10 : 0
   }));
   const completeBoot = useCallback(() => setBootComplete(true), []);
+  const activateAuthenticatedAccount = useCallback(async (
+    result: AuthenticatedAccount,
+    fallback: { fullName?: string; phone?: string } = {}
+  ) => {
+    const resolvedRole = result.profile.role;
+    if (resolvedRole === "admin") return false;
+
+    if (resolvedRole === "driver") {
+      const driver = await ensureDriverProfile(result.user.id);
+      const account = await fetchDriverAccount(driver.id);
+      setDriverRecord({ id: driver.id });
+      setDriverAccount(account);
+      setDriverSubStatus(account.subscriptionStatus);
+      setOnline(false);
+    } else {
+      setDriverRecord(null);
+      setDriverAccount(null);
+      setDriverSubStatus("inactive");
+      setOnline(false);
+    }
+
+    if (resolvedRole !== "business") {
+      setHasBusinessAccount(false);
+      setBusinessAccount(null);
+    }
+    setProfile({
+      id: result.user.id,
+      role: resolvedRole,
+      full_name: result.profile.full_name || fallback.fullName,
+      phone: result.profile.phone || fallback.phone,
+      avatar_url: result.profile.avatar_url || undefined
+    });
+    setMode("app");
+    setCurrentView(resolvedRole === "business" ? "business" : resolvedRole === "driver" ? "driver" : "rider");
+    setAppMessage(null);
+    return true;
+  }, []);
   const applyRouteDetails = useCallback((route: RouteDetails | null) => {
     setRouteDistanceKm(route ? route.distanceMeters / 1000 : null);
     setDraft((current) => (current.routeDetails === route ? current : { ...current, routeDetails: route || undefined }));
@@ -670,6 +721,52 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    if (localPreview) {
+      setAuthRestoreComplete(true);
+      return;
+    }
+
+    const url = new URL(window.location.href);
+    if (url.searchParams.get("admin") === "control") {
+      setAuthRestoreComplete(true);
+      return;
+    }
+
+    let active = true;
+    const hashParams = new URLSearchParams(url.hash.replace(/^#/, ""));
+    const oauthError = url.searchParams.get("error_description") || hashParams.get("error_description");
+    if (oauthError) {
+      ["error", "error_code", "error_description"].forEach((key) => url.searchParams.delete(key));
+      url.hash = "";
+      window.history.replaceState({}, "", `${url.pathname}${url.search}`);
+      setAppMessage("Google sign-in was cancelled or could not be completed. Please try again.");
+      setAuthRestoreComplete(true);
+      return;
+    }
+
+    void restoreSignedInProfile()
+      .then(async (result) => {
+        if (!active || !result) return;
+        if (result.profile?.role === "admin") {
+          await signOutCurrentUser();
+          if (active) setAppMessage("Use the private administrator sign-in for this account.");
+          return;
+        }
+        await activateAuthenticatedAccount(result as AuthenticatedAccount);
+      })
+      .catch(() => {
+        if (active) setAppMessage("Could not restore your Lin Ride sign-in. Please sign in again.");
+      })
+      .finally(() => {
+        if (active) setAuthRestoreComplete(true);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [activateAuthenticatedAccount, localPreview]);
+
+  useEffect(() => {
     if (localPreview) return;
     const url = new URL(window.location.href);
     if (url.searchParams.get("admin") !== "control") return;
@@ -786,7 +883,7 @@ export default function Home() {
     setAppMessage(status === "approved" ? "Weekly payment approved. The driver pass is active for 7 days." : "Weekly payment rejected.");
   }
 
-  if (!bootComplete) {
+  if (!bootComplete || !authRestoreComplete) {
     return <LoadingScreen onComplete={completeBoot} />;
   }
 
@@ -1115,29 +1212,11 @@ export default function Home() {
           setAppMessage("This account uses the private administrator sign-in.");
           return;
         }
-        const resolvedRole = (result.profile?.role || role) as Role;
-        nextRole = resolvedRole;
-        setProfile({
-          id: result.user.id,
-          role: resolvedRole,
-          full_name: result.profile?.full_name || options.fullName,
-          phone: result.profile?.phone || options.phone,
-          avatar_url: result.profile?.avatar_url || undefined
+        await activateAuthenticatedAccount(result as AuthenticatedAccount, {
+          fullName: options.fullName,
+          phone: options.phone
         });
-        if (resolvedRole === "driver") {
-          const driver = await ensureDriverProfile(result.user.id);
-          setDriverRecord({ id: driver.id });
-          const account = await fetchDriverAccount(driver.id);
-          setDriverAccount(account);
-          setDriverSubStatus(account.subscriptionStatus);
-          setOnline(false);
-        }
-        if (resolvedRole === "admin") {
-          setMode("app");
-          setCurrentView("admin");
-          setAppMessage(null);
-          return;
-        }
+        return;
       }
 
       setMode("app");
@@ -1148,10 +1227,31 @@ export default function Home() {
     }
   }
 
+  async function enterWithGoogle(
+    role: Exclude<Role, "admin">,
+    options: { authMode: "signup" | "signin"; fullName: string; phone: string }
+  ) {
+    try {
+      if (options.authMode === "signup" && (!options.fullName.trim() || !options.phone.trim())) {
+        setAppMessage("Enter your name and phone number before signing up with Google.");
+        return;
+      }
+      setAppMessage(null);
+      await signInWithGoogle({
+        role,
+        fullName: options.fullName,
+        phone: options.phone
+      });
+    } catch (error) {
+      setAppMessage(error instanceof Error ? error.message : "Could not start Google sign-in.");
+    }
+  }
+
   if (mode === "welcome") {
     return (
       <WelcomeScreen
         onChooseRole={(role, options) => enterRole(role, options)}
+        onGoogleSignIn={(role, options) => enterWithGoogle(role, options)}
         message={appMessage}
         theme={theme}
         onToggleTheme={toggleTheme}

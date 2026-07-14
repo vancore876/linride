@@ -15,6 +15,7 @@ type AuthOptions = {
 
 type WelcomeScreenProps = {
   onChooseRole: (role: Role, options: AuthOptions) => Promise<void>;
+  onGoogleSignIn: (role: Exclude<Role, "admin">, options: Pick<AuthOptions, "authMode" | "fullName" | "phone">) => Promise<void>;
   message?: string | null;
   theme: "dark" | "light";
   onToggleTheme: () => void;
@@ -26,7 +27,7 @@ const signupRoles: Array<{ label: string; value: Exclude<Role, "admin"> }> = [
   { label: "Business user", value: "business" }
 ];
 
-export function WelcomeScreen({ onChooseRole, message, theme, onToggleTheme }: WelcomeScreenProps) {
+export function WelcomeScreen({ onChooseRole, onGoogleSignIn, message, theme, onToggleTheme }: WelcomeScreenProps) {
   const [screen, setScreen] = useState<"home" | AuthMode>("home");
   const [signupRole, setSignupRole] = useState<Exclude<Role, "admin">>("rider");
   const [signinRole, setSigninRole] = useState<Exclude<Role, "admin">>("rider");
@@ -35,6 +36,7 @@ export function WelcomeScreen({ onChooseRole, message, theme, onToggleTheme }: W
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [authBusy, setAuthBusy] = useState(false);
+  const [authMethod, setAuthMethod] = useState<"password" | "google" | null>(null);
   const authBusyRef = useRef(false);
 
   const activeRole = screen === "signin" ? signinRole : signupRole;
@@ -57,22 +59,38 @@ export function WelcomeScreen({ onChooseRole, message, theme, onToggleTheme }: W
     };
   }, [screen]);
 
-  async function submitAuth() {
-    if (screen === "home" || authBusyRef.current) return;
+  async function runAuth(method: "password" | "google", action: () => Promise<void>) {
+    if (authBusyRef.current) return;
     authBusyRef.current = true;
     setAuthBusy(true);
+    setAuthMethod(method);
     try {
-      await onChooseRole(activeRole, {
+      await action();
+    } finally {
+      authBusyRef.current = false;
+      setAuthBusy(false);
+      setAuthMethod(null);
+    }
+  }
+
+  async function submitAuth() {
+    if (screen === "home") return;
+    await runAuth("password", () => onChooseRole(activeRole, {
         authMode: screen,
         email,
         password,
         fullName,
         phone
-      });
-    } finally {
-      authBusyRef.current = false;
-      setAuthBusy(false);
-    }
+      }));
+  }
+
+  async function submitGoogle() {
+    if (screen === "home") return;
+    await runAuth("google", () => onGoogleSignIn(activeRole, {
+      authMode: screen,
+      fullName,
+      phone
+    }));
   }
 
   if (screen !== "home") {
@@ -184,7 +202,29 @@ export function WelcomeScreen({ onChooseRole, message, theme, onToggleTheme }: W
               </p>
             )}
 
-            <div className="mt-3 grid gap-3 md:grid-cols-2">
+            <button
+              type="button"
+              onClick={() => void submitGoogle()}
+              disabled={authBusy}
+              className="mt-4 flex w-full items-center justify-center gap-3 rounded-2xl border border-charcoal/15 bg-white px-5 py-4 text-sm font-black text-ink shadow-sm transition hover:border-charcoal/30 disabled:cursor-wait disabled:opacity-60"
+            >
+              <span className="grid h-7 w-7 place-items-center rounded-full border border-charcoal/10 bg-white text-base font-black text-[#4285f4]" aria-hidden="true">
+                G
+              </span>
+              {authBusy && authMethod === "google"
+                ? "Connecting to Google..."
+                : screen === "signup"
+                  ? "Sign up with Google"
+                  : "Continue with Google"}
+            </button>
+
+            <div className="my-4 flex items-center gap-3 text-xs font-black uppercase text-charcoal/40">
+              <span className="h-px flex-1 bg-charcoal/10" />
+              Or use email
+              <span className="h-px flex-1 bg-charcoal/10" />
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-2">
               <input
                 value={email}
                 disabled={authBusy}
@@ -206,7 +246,9 @@ export function WelcomeScreen({ onChooseRole, message, theme, onToggleTheme }: W
             {message && <p className="mt-4 rounded-2xl bg-linred/10 px-3 py-3 text-sm font-bold text-linred">{message}</p>}
 
             <button type="submit" disabled={authBusy} className="linride-submit mt-5 disabled:cursor-wait disabled:opacity-60">
-              {authBusy ? (screen === "signup" ? "Creating account..." : "Signing in...") : actionCopy.button}
+              {authBusy && authMethod === "password"
+                ? (screen === "signup" ? "Creating account..." : "Signing in...")
+                : actionCopy.button}
             </button>
 
             <button

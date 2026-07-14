@@ -40,6 +40,8 @@ function requireSupabase() {
   return supabase;
 }
 
+const OAUTH_PROFILE_STORAGE_KEY = "linride-google-profile";
+
 function authErrorCode(error: unknown) {
   return typeof error === "object" && error && "code" in error
     ? String((error as { code?: unknown }).code || "")
@@ -81,18 +83,43 @@ async function loadOrCreateProfile(
 ) {
   const { data: existing, error: readError } = await client.from("profiles").select("*").eq("id", user.id).maybeSingle();
   if (readError) throw new Error(readError.message);
-  if (existing) return existing;
 
   const metadata = user.user_metadata || {};
   const role = publicAccountRole(metadata.role, defaults.role);
-  const metadataName = typeof metadata.full_name === "string" ? metadata.full_name.trim() : "";
+  const metadataName = typeof metadata.full_name === "string"
+    ? metadata.full_name.trim()
+    : typeof metadata.name === "string"
+      ? metadata.name.trim()
+      : "";
   const metadataPhone = typeof metadata.phone === "string" ? metadata.phone.trim() : "";
+  const metadataAvatar = typeof metadata.avatar_url === "string"
+    ? metadata.avatar_url.trim()
+    : typeof metadata.picture === "string"
+      ? metadata.picture.trim()
+      : "";
   const fullName = metadataName || defaults.fullName?.trim() || "Lin Ride user";
   const phone = metadataPhone || defaults.phone?.trim() || null;
 
+  if (existing) {
+    const updates: Record<string, string> = {};
+    if (!existing.full_name && fullName) updates.full_name = fullName;
+    if (!existing.phone && phone) updates.phone = phone;
+    if (!existing.avatar_url && metadataAvatar) updates.avatar_url = metadataAvatar;
+    if (Object.keys(updates).length === 0) return existing;
+
+    const { data: updated, error: updateError } = await client
+      .from("profiles")
+      .update(updates)
+      .eq("id", user.id)
+      .select("*")
+      .single();
+    if (updateError) throw new Error(updateError.message);
+    return updated;
+  }
+
   const { data, error } = await client
     .from("profiles")
-    .insert({ id: user.id, role, full_name: fullName, phone })
+    .insert({ id: user.id, role, full_name: fullName, phone, avatar_url: metadataAvatar || null })
     .select("*")
     .single();
   if (error) throw new Error(error.message);
@@ -432,6 +459,80 @@ export async function signInWithProfile(params: {
   }
   const profile = await loadOrCreateProfile(client, signIn.data.user, { role: params.fallbackRole });
   return { user: signIn.data.user, profile };
+}
+
+export async function signInWithGoogle(params: {
+  role: Exclude<Role, "admin">;
+  fullName?: string;
+  phone?: string;
+}) {
+  const client = requireSupabase();
+  if (typeof window === "undefined") throw new Error("Google sign-in must be started from the Lin Ride app.");
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !supabaseKey) throw new Error("Google sign-in is not configured yet.");
+
+  try {
+    const response = await fetch(`${supabaseUrl}/auth/v1/settings`, { headers: { apikey: supabaseKey } });
+    if (response.ok) {
+      const settings = await response.json() as { external?: { google?: boolean } };
+      if (settings.external?.google !== true) {
+        throw new Error("Google sign-in still needs to be enabled in the Lin Ride authentication settings.");
+      }
+    }
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("still needs to be enabled")) throw error;
+    throw new Error("Could not connect to Google sign-in. Check your internet and try again.");
+  }
+
+  window.localStorage.setItem(OAUTH_PROFILE_STORAGE_KEY, JSON.stringify({
+    role: params.role,
+    fullName: params.fullName?.trim() || "",
+    phone: params.phone?.trim() || ""
+  }));
+
+  const { error } = await client.auth.signInWithOAuth({
+    provider: "google",
+    options: { redirectTo: `${window.location.origin}/` }
+  });
+  if (error) {
+    window.localStorage.removeItem(OAUTH_PROFILE_STORAGE_KEY);
+    throw new Error(friendlyAuthMessage(error, "Could not start Google sign-in."));
+  }
+}
+
+export async function restoreSignedInProfile() {
+  const client = requireSupabase();
+  const { data: auth, error } = await client.auth.getUser();
+  if (error || !auth.user) {
+    if (error) await client.auth.signOut({ scope: "local" }).catch(() => undefined);
+    return null;
+  }
+
+  let defaults: { role: Role; fullName?: string; phone?: string } = { role: "rider" };
+  if (typeof window !== "undefined") {
+    try {
+      const saved = JSON.parse(window.localStorage.getItem(OAUTH_PROFILE_STORAGE_KEY) || "null") as {
+        role?: unknown;
+        fullName?: unknown;
+        phone?: unknown;
+      } | null;
+      if (saved) {
+        defaults = {
+          role: publicAccountRole(saved.role, "rider"),
+          fullName: typeof saved.fullName === "string" ? saved.fullName : undefined,
+          phone: typeof saved.phone === "string" ? saved.phone : undefined
+        };
+      }
+    } catch {
+      defaults = { role: "rider" };
+    }
+  }
+
+  const profile = await loadOrCreateProfile(client, auth.user, defaults);
+  if (typeof window !== "undefined") window.localStorage.removeItem(OAUTH_PROFILE_STORAGE_KEY);
+  return { user: auth.user, profile };
 }
 
 export async function signInAdmin(params: { email: string; password: string }) {

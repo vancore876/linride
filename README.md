@@ -71,6 +71,26 @@ The app uses backend mode when the Supabase URL and browser key are present. It 
 
 Restrict the browser Geoapify key to the Lin Ride domains before deployment. The server route API prefers `GEOAPIFY_API_KEY` and temporarily caches identical routes for five minutes.
 
+## Authentication Setup
+
+To allow email/password accounts to open immediately without a confirmation email:
+
+1. Open the Supabase project dashboard.
+2. Go to **Authentication > Providers > Email**.
+3. Turn **Confirm email** off and save.
+
+To enable the app's **Continue with Google** button:
+
+1. Create a Web OAuth client in Google Auth Platform.
+2. Add `https://linride-jamaica.netlify.app` and `http://localhost:3000` as authorized JavaScript origins.
+3. Add `https://hmlncezdugtpmfjktelb.supabase.co/auth/v1/callback` as the authorized redirect URI.
+4. In Supabase, go to **Authentication > Providers > Google**, enter the Google Client ID and Client Secret, enable the provider, and save.
+5. In **Authentication > URL Configuration**, use `https://linride-jamaica.netlify.app` as the production Site URL and allow both the production URL and `http://localhost:3000` for redirects.
+
+Google credentials belong in the Google and Supabase dashboards, not in `.env.local` or source control. Google sign-in restores the user's Lin Ride session automatically, keeps the selected Passenger, Driver, or Business role for new accounts, and uses the Google profile image when available.
+
+Disabling email confirmation means password accounts can use an address they do not own. Prefer Google sign-in for public users and enable Supabase CAPTCHA protection before a public launch.
+
 ## Database Setup
 
 Run every SQL file in `supabase/` in numeric order. Existing migrations are additive and should not be rewritten after deployment.
