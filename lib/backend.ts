@@ -43,9 +43,17 @@ function requireSupabase() {
 const OAUTH_PROFILE_STORAGE_KEY = "linride-google-profile";
 
 function authErrorCode(error: unknown) {
-  return typeof error === "object" && error && "code" in error
+  const code = typeof error === "object" && error && "code" in error
     ? String((error as { code?: unknown }).code || "")
     : "";
+  if (code) return code;
+
+  const message = error instanceof Error ? error.message.toLowerCase() : "";
+  if (message.includes("email not confirmed")) return "email_not_confirmed";
+  if (message.includes("email rate limit exceeded")) return "over_email_send_rate_limit";
+  if (message.includes("rate limit")) return "over_request_rate_limit";
+  if (message.includes("invalid login credentials")) return "invalid_credentials";
+  return "";
 }
 
 function friendlyAuthMessage(error: unknown, fallback: string) {
@@ -60,7 +68,7 @@ function friendlyAuthMessage(error: unknown, fallback: string) {
     return "Too many requests were made. Wait a few minutes, then try again.";
   }
   if (code === "email_address_not_authorized") {
-    return "Lin Ride cannot send a confirmation email to this address yet. Please contact Lin Ride support.";
+    return "This email address cannot be used right now. Continue with Google or use another email.";
   }
   if (code === "invalid_credentials") return "Email or password is incorrect.";
   if (code === "user_already_exists" || code === "email_exists") {
@@ -431,7 +439,7 @@ export async function signUpWithProfile(params: {
       fullName: params.fullName,
       phone: params.phone
     });
-    return { user: existingSignIn.data.user, profile, requiresEmailConfirmation: false as const };
+    return { user: existingSignIn.data.user, profile };
   }
   if (existingSignIn.error && authErrorCode(existingSignIn.error) !== "invalid_credentials") {
     throw new Error(friendlyAuthMessage(existingSignIn.error, "Could not check this Lin Ride account."));
@@ -458,7 +466,7 @@ export async function signUpWithProfile(params: {
         fullName: params.fullName,
         phone: params.phone
       });
-      return { user: completedSignIn.data.user, profile, requiresEmailConfirmation: false as const };
+      return { user: completedSignIn.data.user, profile };
     }
   }
 
@@ -476,7 +484,7 @@ export async function signUpWithProfile(params: {
       fullName: params.fullName,
       phone: params.phone
     });
-    return { user: completedSignIn.data.user, profile, requiresEmailConfirmation: false as const };
+    return { user: completedSignIn.data.user, profile };
   }
 
   const profile = await loadOrCreateProfile(client, signUp.data.user, {
@@ -484,7 +492,7 @@ export async function signUpWithProfile(params: {
     fullName: params.fullName,
     phone: params.phone
   });
-  return { user: signUp.data.user, profile, requiresEmailConfirmation: false as const };
+  return { user: signUp.data.user, profile };
 }
 
 export async function signInWithProfile(params: {
