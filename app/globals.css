@@ -288,6 +288,8 @@ h4,
 
 .linride-screen {
   display: block;
+  min-width: 0;
+  max-width: 100%;
   padding: clamp(12px, 2.5vw, 18px) 0 42px;
 }
 
@@ -305,10 +307,17 @@ h4,
 
 .linride-panel-grid {
   display: grid;
+  min-width: 0;
+  max-width: 100%;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 16px;
   align-items: start;
   margin-top: 16px;
+}
+
+.linride-panel-grid > * {
+  min-width: 0;
+  max-width: 100%;
 }
 
 .linride-card {
@@ -594,7 +603,7 @@ h4,
 @media (max-width: 900px) {
   .linride-hero,
   .linride-panel-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 

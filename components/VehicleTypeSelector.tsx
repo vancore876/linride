@@ -16,7 +16,7 @@ type VehicleTypeSelectorProps = {
 
 export function VehicleTypeSelector({ value, onChange }: VehicleTypeSelectorProps) {
   return (
-    <div className="grid grid-cols-2 gap-2">
+    <div className="grid min-w-0 grid-cols-2 gap-2">
       {options.map((option) => {
         const Icon = option.icon;
         const selected = option.value === value;
@@ -25,10 +25,10 @@ export function VehicleTypeSelector({ value, onChange }: VehicleTypeSelectorProp
             key={option.value}
             type="button"
             onClick={() => onChange(option.value)}
-            className={`linride-pill flex items-center gap-2 text-left ${selected ? "linride-pill-active" : ""}`}
+            className={`linride-pill flex min-w-0 items-center gap-2 text-left ${selected ? "linride-pill-active" : ""}`}
           >
-            <Icon size={18} />
-            {option.value}
+            <Icon className="shrink-0" size={18} />
+            <span className="min-w-0 break-words">{option.value}</span>
           </button>
         );
       })}

@@ -292,7 +292,7 @@ export function RiderHome({
       </section>
 
       <section className="linride-panel-grid">
-        <div className="linride-card">
+        <div className="linride-card min-w-0 max-w-full">
           <p className="linride-eyebrow">Start here</p>
           <h2 className="text-3xl font-black">Hi {rider.fullName}, book your trip.</h2>
           <p className="linride-card-desc mt-2">
@@ -365,7 +365,7 @@ export function RiderHome({
           {!pinsConfirmed && <p className="mt-2 text-center text-xs font-bold text-charcoal/50">Confirm the map pins before finding a driver.</p>}
         </div>
 
-        <div className="space-y-4">
+        <div className="min-w-0 max-w-full space-y-4">
         {driverOffers.length > 0 && onSelectDriverOffer && (
           <DriverOfferSelection
             offers={driverOffers}
@@ -401,7 +401,7 @@ export function RiderHome({
             <TripPinCard mode="display" pin={tripPin} verified={tripPinVerified} message={tripPinMessage} onVerify={onVerifyTripPin} />
           )}
 
-          <details className="linride-card">
+          <details className="linride-card min-w-0 max-w-full overflow-hidden">
             <summary className="cursor-pointer list-none">
               <span className="flex items-center justify-between gap-3">
                 <span>
@@ -410,10 +410,10 @@ export function RiderHome({
                     Vehicle type and quick local places.
                   </span>
                 </span>
-                <span className="linride-status-badge linride-status-pending">Open</span>
+                <span className="linride-status-badge linride-status-pending shrink-0">Open</span>
               </span>
             </summary>
-            <div className="mt-4 space-y-4">
+            <div className="mt-4 min-w-0 max-w-full space-y-4">
               <section>
                 <h3>Vehicle type</h3>
                 <p className="linride-card-desc">Pick what fits your request.</p>
