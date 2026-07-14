@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import type { User } from "@supabase/supabase-js";
 import { DRIVER_WEEKLY_PASS_JMD } from "@/lib/driverPricing";
 import {
   BoostTag,
@@ -37,6 +38,65 @@ import {
 function requireSupabase() {
   if (!supabase) throw new Error("Could not connect to Lin Ride. Check your internet.");
   return supabase;
+}
+
+function authErrorCode(error: unknown) {
+  return typeof error === "object" && error && "code" in error
+    ? String((error as { code?: unknown }).code || "")
+    : "";
+}
+
+function friendlyAuthMessage(error: unknown, fallback: string) {
+  const code = authErrorCode(error);
+  if (code === "email_not_confirmed") {
+    return "This account already exists, but its email is not confirmed. Use the newest Lin Ride confirmation email in your inbox or spam folder.";
+  }
+  if (code === "over_email_send_rate_limit") {
+    return "Too many confirmation emails were requested. Use the newest email already sent, or wait up to one hour before trying again.";
+  }
+  if (code === "over_request_rate_limit") {
+    return "Too many requests were made. Wait a few minutes, then try again.";
+  }
+  if (code === "email_address_not_authorized") {
+    return "Lin Ride cannot send a confirmation email to this address yet. Please contact Lin Ride support.";
+  }
+  if (code === "invalid_credentials") return "Email or password is incorrect.";
+  if (code === "user_already_exists" || code === "email_exists") {
+    return "An account with this email already exists. Sign in instead.";
+  }
+
+  const message = error instanceof Error ? error.message : "";
+  return message || fallback;
+}
+
+function publicAccountRole(value: unknown, fallback: Role): Exclude<Role, "admin"> {
+  if (value === "rider" || value === "driver" || value === "business") return value;
+  return fallback === "admin" ? "rider" : fallback;
+}
+
+async function loadOrCreateProfile(
+  client: ReturnType<typeof requireSupabase>,
+  user: User,
+  defaults: { role: Role; fullName?: string; phone?: string }
+) {
+  const { data: existing, error: readError } = await client.from("profiles").select("*").eq("id", user.id).maybeSingle();
+  if (readError) throw new Error(readError.message);
+  if (existing) return existing;
+
+  const metadata = user.user_metadata || {};
+  const role = publicAccountRole(metadata.role, defaults.role);
+  const metadataName = typeof metadata.full_name === "string" ? metadata.full_name.trim() : "";
+  const metadataPhone = typeof metadata.phone === "string" ? metadata.phone.trim() : "";
+  const fullName = metadataName || defaults.fullName?.trim() || "Lin Ride user";
+  const phone = metadataPhone || defaults.phone?.trim() || null;
+
+  const { data, error } = await client
+    .from("profiles")
+    .insert({ id: user.id, role, full_name: fullName, phone })
+    .select("*")
+    .single();
+  if (error) throw new Error(error.message);
+  return data;
 }
 
 function friendlyBackendMessage(error: unknown, fallback: string) {
@@ -311,6 +371,26 @@ export async function signUpWithProfile(params: {
   const client = requireSupabase();
   const role = params.role === "admin" ? "rider" : params.role;
   await client.auth.signOut({ scope: "local" });
+
+  const existingSignIn = await client.auth.signInWithPassword({
+    email: params.email,
+    password: params.password
+  });
+  if (!existingSignIn.error && existingSignIn.data.user) {
+    const profile = await loadOrCreateProfile(client, existingSignIn.data.user, {
+      role,
+      fullName: params.fullName,
+      phone: params.phone
+    });
+    return { user: existingSignIn.data.user, profile, requiresEmailConfirmation: false as const };
+  }
+  if (authErrorCode(existingSignIn.error) === "email_not_confirmed") {
+    throw new Error(friendlyAuthMessage(existingSignIn.error, "Confirm your email before signing in."));
+  }
+  if (existingSignIn.error && authErrorCode(existingSignIn.error) !== "invalid_credentials") {
+    throw new Error(friendlyAuthMessage(existingSignIn.error, "Could not check this Lin Ride account."));
+  }
+
   const signUp = await client.auth.signUp({
     email: params.email,
     password: params.password,
@@ -325,29 +405,19 @@ export async function signUpWithProfile(params: {
   });
 
   if (signUp.error || !signUp.data.user) {
-    throw new Error(signUp.error?.message || "Could not create your Lin Ride account.");
+    throw new Error(friendlyAuthMessage(signUp.error, "Could not create your Lin Ride account."));
   }
 
   if (!signUp.data.session) {
     return { user: signUp.data.user, profile: null, requiresEmailConfirmation: true as const };
   }
 
-  const { data: existing, error: readError } = await client.from("profiles").select("*").eq("id", signUp.data.user.id).maybeSingle();
-  if (readError) throw new Error(readError.message);
-  if (existing) return { user: signUp.data.user, profile: existing, requiresEmailConfirmation: false as const };
-
-  const { data, error } = await client
-    .from("profiles")
-    .insert({
-      id: signUp.data.user.id,
-      role,
-      full_name: params.fullName,
-      phone: params.phone
-    })
-    .select("*")
-    .single();
-  if (error) throw new Error(error.message);
-  return { user: signUp.data.user, profile: data, requiresEmailConfirmation: false as const };
+  const profile = await loadOrCreateProfile(client, signUp.data.user, {
+    role,
+    fullName: params.fullName,
+    phone: params.phone
+  });
+  return { user: signUp.data.user, profile, requiresEmailConfirmation: false as const };
 }
 
 export async function signInWithProfile(params: {
@@ -358,33 +428,10 @@ export async function signInWithProfile(params: {
   const client = requireSupabase();
   const signIn = await client.auth.signInWithPassword({ email: params.email, password: params.password });
   if (signIn.error || !signIn.data.user) {
-    throw new Error(signIn.error?.message || "Could not sign in to Lin Ride.");
+    throw new Error(friendlyAuthMessage(signIn.error, "Could not sign in to Lin Ride."));
   }
-
-  const { data: existing, error: readError } = await client.from("profiles").select("*").eq("id", signIn.data.user.id).maybeSingle();
-  if (readError) throw new Error(readError.message);
-  if (existing) return { user: signIn.data.user, profile: existing };
-
-  const metadata = signIn.data.user.user_metadata || {};
-  const metadataRole = metadata.role;
-  const role = metadataRole === "rider" || metadataRole === "driver" || metadataRole === "business"
-    ? metadataRole
-    : params.fallbackRole === "admin"
-      ? "rider"
-      : params.fallbackRole;
-
-  const { data, error } = await client
-    .from("profiles")
-    .insert({
-      id: signIn.data.user.id,
-      role,
-      full_name: typeof metadata.full_name === "string" && metadata.full_name.trim() ? metadata.full_name.trim() : "Lin Ride user",
-      phone: typeof metadata.phone === "string" && metadata.phone.trim() ? metadata.phone.trim() : null
-    })
-    .select("*")
-    .single();
-  if (error) throw new Error(error.message);
-  return { user: signIn.data.user, profile: data };
+  const profile = await loadOrCreateProfile(client, signIn.data.user, { role: params.fallbackRole });
+  return { user: signIn.data.user, profile };
 }
 
 export async function signInAdmin(params: { email: string; password: string }) {

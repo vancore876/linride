@@ -1151,7 +1151,7 @@ export default function Home() {
   if (mode === "welcome") {
     return (
       <WelcomeScreen
-        onChooseRole={(role, options) => void enterRole(role, options)}
+        onChooseRole={(role, options) => enterRole(role, options)}
         message={appMessage}
         theme={theme}
         onToggleTheme={toggleTheme}

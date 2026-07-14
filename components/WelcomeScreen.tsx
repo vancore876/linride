@@ -1,5 +1,5 @@
 import { ArrowLeft, BriefcaseBusiness, Car, CheckCircle2, MapPinned, Moon, Sun, UserRound, Video } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { LINRIDE_TIKTOK } from "@/lib/social";
 import { Role } from "@/types/linride";
 
@@ -14,7 +14,7 @@ type AuthOptions = {
 };
 
 type WelcomeScreenProps = {
-  onChooseRole: (role: Role, options: AuthOptions) => void;
+  onChooseRole: (role: Role, options: AuthOptions) => Promise<void>;
   message?: string | null;
   theme: "dark" | "light";
   onToggleTheme: () => void;
@@ -34,6 +34,8 @@ export function WelcomeScreen({ onChooseRole, message, theme, onToggleTheme }: W
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
+  const [authBusy, setAuthBusy] = useState(false);
+  const authBusyRef = useRef(false);
 
   const activeRole = screen === "signin" ? signinRole : signupRole;
   const isDark = theme === "dark";
@@ -55,15 +57,22 @@ export function WelcomeScreen({ onChooseRole, message, theme, onToggleTheme }: W
     };
   }, [screen]);
 
-  function submitAuth() {
-    if (screen === "home") return;
-    onChooseRole(activeRole, {
-      authMode: screen,
-      email,
-      password,
-      fullName,
-      phone
-    });
+  async function submitAuth() {
+    if (screen === "home" || authBusyRef.current) return;
+    authBusyRef.current = true;
+    setAuthBusy(true);
+    try {
+      await onChooseRole(activeRole, {
+        authMode: screen,
+        email,
+        password,
+        fullName,
+        phone
+      });
+    } finally {
+      authBusyRef.current = false;
+      setAuthBusy(false);
+    }
   }
 
   if (screen !== "home") {
@@ -77,7 +86,8 @@ export function WelcomeScreen({ onChooseRole, message, theme, onToggleTheme }: W
               <button
                 type="button"
                 onClick={() => setScreen("home")}
-                className="flex items-center gap-2 rounded-full border border-white/15 px-4 py-2 text-sm font-black text-white/80"
+                disabled={authBusy}
+                className="flex items-center gap-2 rounded-full border border-white/15 px-4 py-2 text-sm font-black text-white/80 disabled:cursor-wait disabled:opacity-60"
               >
                 <ArrowLeft size={17} />
                 Back
@@ -118,7 +128,7 @@ export function WelcomeScreen({ onChooseRole, message, theme, onToggleTheme }: W
             className="linride-card"
             onSubmit={(event) => {
               event.preventDefault();
-              submitAuth();
+              void submitAuth();
             }}
           >
             <div className="mb-5">
@@ -133,6 +143,7 @@ export function WelcomeScreen({ onChooseRole, message, theme, onToggleTheme }: W
               {screen === "signup" ? "What are you signing up for?" : "What are you signing in as?"}
               <select
                 value={activeRole}
+                disabled={authBusy}
                 onChange={(event) => {
                   const role = event.target.value as Exclude<Role, "admin">;
                   if (screen === "signin") setSigninRole(role);
@@ -152,12 +163,14 @@ export function WelcomeScreen({ onChooseRole, message, theme, onToggleTheme }: W
               <div className="mt-3 grid gap-3 md:grid-cols-2">
                 <input
                   value={fullName}
+                  disabled={authBusy}
                   onChange={(event) => setFullName(event.target.value)}
                   className="linride-input"
                   placeholder={signupRole === "business" ? "Business name" : "Full name"}
                 />
                 <input
                   value={phone}
+                  disabled={authBusy}
                   onChange={(event) => setPhone(event.target.value)}
                   className="linride-input"
                   placeholder={signupRole === "driver" ? "Real phone number" : "876-000-0000"}
@@ -174,6 +187,7 @@ export function WelcomeScreen({ onChooseRole, message, theme, onToggleTheme }: W
             <div className="mt-3 grid gap-3 md:grid-cols-2">
               <input
                 value={email}
+                disabled={authBusy}
                 onChange={(event) => setEmail(event.target.value)}
                 className="linride-input"
                 placeholder="name@email.com"
@@ -181,6 +195,7 @@ export function WelcomeScreen({ onChooseRole, message, theme, onToggleTheme }: W
               />
               <input
                 value={password}
+                disabled={authBusy}
                 onChange={(event) => setPassword(event.target.value)}
                 className="linride-input"
                 placeholder="Password"
@@ -190,14 +205,15 @@ export function WelcomeScreen({ onChooseRole, message, theme, onToggleTheme }: W
 
             {message && <p className="mt-4 rounded-2xl bg-linred/10 px-3 py-3 text-sm font-bold text-linred">{message}</p>}
 
-            <button type="submit" className="linride-submit mt-5">
-              {actionCopy.button}
+            <button type="submit" disabled={authBusy} className="linride-submit mt-5 disabled:cursor-wait disabled:opacity-60">
+              {authBusy ? (screen === "signup" ? "Creating account..." : "Signing in...") : actionCopy.button}
             </button>
 
             <button
               type="button"
               onClick={() => setScreen(screen === "signup" ? "signin" : "signup")}
-              className="mt-3 w-full rounded-2xl bg-smoke px-5 py-4 text-sm font-black text-charcoal"
+              disabled={authBusy}
+              className="mt-3 w-full rounded-2xl bg-smoke px-5 py-4 text-sm font-black text-charcoal disabled:cursor-wait disabled:opacity-60"
             >
               {screen === "signup" ? "Already have an account? Sign in" : "Need an account? Sign up"}
             </button>
