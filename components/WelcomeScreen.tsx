@@ -319,7 +319,6 @@ export function WelcomeScreen({ onChooseRole, onGoogleSignIn, message, theme, on
 
           <div className="linride-stat-grid">
             {[
-              ["0%", "Fare commission"],
               ["J$2,000", "Weekly driver pass"],
               ["Live", "Driver GPS"],
               ["JM", "Jamaica locations"]
