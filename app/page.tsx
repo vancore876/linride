@@ -1106,6 +1106,10 @@ export default function Home() {
                 phone: options.phone,
                 role
               });
+        if (!result.profile) {
+          setAppMessage("Account created. Check your email for the confirmation link, then return to Lin Ride and sign in.");
+          return;
+        }
         if (result.profile?.role === "admin") {
           await signOutCurrentUser();
           setAppMessage("This account uses the private administrator sign-in.");

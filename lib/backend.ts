@@ -309,14 +309,17 @@ export async function signUpWithProfile(params: {
   role: Role;
 }) {
   const client = requireSupabase();
+  const role = params.role === "admin" ? "rider" : params.role;
+  await client.auth.signOut({ scope: "local" });
   const signUp = await client.auth.signUp({
     email: params.email,
     password: params.password,
     options: {
+      emailRedirectTo: typeof window !== "undefined" ? window.location.origin : undefined,
       data: {
         full_name: params.fullName,
         phone: params.phone,
-        role: params.role
+        role
       }
     }
   });
@@ -325,21 +328,26 @@ export async function signUpWithProfile(params: {
     throw new Error(signUp.error?.message || "Could not create your Lin Ride account.");
   }
 
-  const { data: existing } = await client.from("profiles").select("*").eq("id", signUp.data.user.id).maybeSingle();
-  if (existing) return { user: signUp.data.user, profile: existing };
+  if (!signUp.data.session) {
+    return { user: signUp.data.user, profile: null, requiresEmailConfirmation: true as const };
+  }
+
+  const { data: existing, error: readError } = await client.from("profiles").select("*").eq("id", signUp.data.user.id).maybeSingle();
+  if (readError) throw new Error(readError.message);
+  if (existing) return { user: signUp.data.user, profile: existing, requiresEmailConfirmation: false as const };
 
   const { data, error } = await client
     .from("profiles")
     .insert({
       id: signUp.data.user.id,
-      role: params.role,
+      role,
       full_name: params.fullName,
       phone: params.phone
     })
-    .select("*, ride_requests(pickup_name,destination_name,service_type)")
+    .select("*")
     .single();
   if (error) throw new Error(error.message);
-  return { user: signUp.data.user, profile: data };
+  return { user: signUp.data.user, profile: data, requiresEmailConfirmation: false as const };
 }
 
 export async function signInWithProfile(params: {
@@ -357,12 +365,21 @@ export async function signInWithProfile(params: {
   if (readError) throw new Error(readError.message);
   if (existing) return { user: signIn.data.user, profile: existing };
 
+  const metadata = signIn.data.user.user_metadata || {};
+  const metadataRole = metadata.role;
+  const role = metadataRole === "rider" || metadataRole === "driver" || metadataRole === "business"
+    ? metadataRole
+    : params.fallbackRole === "admin"
+      ? "rider"
+      : params.fallbackRole;
+
   const { data, error } = await client
     .from("profiles")
     .insert({
       id: signIn.data.user.id,
-      role: params.fallbackRole,
-      full_name: "Lin Ride user"
+      role,
+      full_name: typeof metadata.full_name === "string" && metadata.full_name.trim() ? metadata.full_name.trim() : "Lin Ride user",
+      phone: typeof metadata.phone === "string" && metadata.phone.trim() ? metadata.phone.trim() : null
     })
     .select("*")
     .single();
