@@ -16,6 +16,7 @@ type AuthOptions = {
 type WelcomeScreenProps = {
   onChooseRole: (role: Role, options: AuthOptions) => Promise<void>;
   onGoogleSignIn: (role: Exclude<Role, "admin">, options: Pick<AuthOptions, "authMode" | "fullName" | "phone">) => Promise<void>;
+  onClearMessage: () => void;
   message?: string | null;
   theme: "dark" | "light";
   onToggleTheme: () => void;
@@ -27,7 +28,7 @@ const signupRoles: Array<{ label: string; value: Exclude<Role, "admin"> }> = [
   { label: "Business user", value: "business" }
 ];
 
-export function WelcomeScreen({ onChooseRole, onGoogleSignIn, message, theme, onToggleTheme }: WelcomeScreenProps) {
+export function WelcomeScreen({ onChooseRole, onGoogleSignIn, onClearMessage, message, theme, onToggleTheme }: WelcomeScreenProps) {
   const [screen, setScreen] = useState<"home" | AuthMode>("home");
   const [signupRole, setSignupRole] = useState<Exclude<Role, "admin">>("rider");
   const [signinRole, setSigninRole] = useState<Exclude<Role, "admin">>("rider");
@@ -42,6 +43,10 @@ export function WelcomeScreen({ onChooseRole, onGoogleSignIn, message, theme, on
   const activeRole = screen === "signin" ? signinRole : signupRole;
   const isDark = theme === "dark";
   const ThemeIcon = isDark ? Sun : Moon;
+  const changeScreen = (nextScreen: "home" | AuthMode) => {
+    onClearMessage();
+    setScreen(nextScreen);
+  };
   const actionCopy = useMemo(() => {
     if (screen === "signup") {
       return {
@@ -103,7 +108,7 @@ export function WelcomeScreen({ onChooseRole, onGoogleSignIn, message, theme, on
             <div className="mb-8 flex items-center justify-between gap-3">
               <button
                 type="button"
-                onClick={() => setScreen("home")}
+                onClick={() => changeScreen("home")}
                 disabled={authBusy}
                 className="flex items-center gap-2 rounded-full border border-white/15 px-4 py-2 text-sm font-black text-white/80 disabled:cursor-wait disabled:opacity-60"
               >
@@ -163,6 +168,7 @@ export function WelcomeScreen({ onChooseRole, onGoogleSignIn, message, theme, on
                 value={activeRole}
                 disabled={authBusy}
                 onChange={(event) => {
+                  onClearMessage();
                   const role = event.target.value as Exclude<Role, "admin">;
                   if (screen === "signin") setSigninRole(role);
                   else setSignupRole(role);
@@ -182,7 +188,10 @@ export function WelcomeScreen({ onChooseRole, onGoogleSignIn, message, theme, on
                 <input
                   value={fullName}
                   disabled={authBusy}
-                  onChange={(event) => setFullName(event.target.value)}
+                  onChange={(event) => {
+                    onClearMessage();
+                    setFullName(event.target.value);
+                  }}
                   className="linride-input"
                   placeholder={signupRole === "business" ? "Business name" : "Full name"}
                   autoComplete="name"
@@ -191,7 +200,10 @@ export function WelcomeScreen({ onChooseRole, onGoogleSignIn, message, theme, on
                 <input
                   value={phone}
                   disabled={authBusy}
-                  onChange={(event) => setPhone(event.target.value)}
+                  onChange={(event) => {
+                    onClearMessage();
+                    setPhone(event.target.value);
+                  }}
                   className="linride-input"
                   placeholder={signupRole === "driver" ? "Real phone number" : "876-000-0000"}
                   autoComplete="tel"
@@ -239,7 +251,10 @@ export function WelcomeScreen({ onChooseRole, onGoogleSignIn, message, theme, on
               <input
                 value={email}
                 disabled={authBusy}
-                onChange={(event) => setEmail(event.target.value)}
+                onChange={(event) => {
+                  onClearMessage();
+                  setEmail(event.target.value);
+                }}
                 className="linride-input"
                 placeholder="name@email.com"
                 type="email"
@@ -249,7 +264,10 @@ export function WelcomeScreen({ onChooseRole, onGoogleSignIn, message, theme, on
               <input
                 value={password}
                 disabled={authBusy}
-                onChange={(event) => setPassword(event.target.value)}
+                onChange={(event) => {
+                  onClearMessage();
+                  setPassword(event.target.value);
+                }}
                 className="linride-input"
                 placeholder="Password"
                 type="password"
@@ -269,7 +287,7 @@ export function WelcomeScreen({ onChooseRole, onGoogleSignIn, message, theme, on
 
             <button
               type="button"
-              onClick={() => setScreen(screen === "signup" ? "signin" : "signup")}
+              onClick={() => changeScreen(screen === "signup" ? "signin" : "signup")}
               disabled={authBusy}
               className="mt-3 w-full rounded-2xl bg-smoke px-5 py-4 text-sm font-black text-charcoal disabled:cursor-wait disabled:opacity-60"
             >
@@ -322,11 +340,11 @@ export function WelcomeScreen({ onChooseRole, onGoogleSignIn, message, theme, on
               Enter where you are going, choose a fair price, and let nearby drivers or riders respond.
             </p>
             <div className="linride-cta-row">
-              <button type="button" onClick={() => setScreen("signup")} className="linride-cta linride-cta-primary">
+              <button type="button" onClick={() => changeScreen("signup")} className="linride-cta linride-cta-primary">
                 <span className="linride-cta-title">Create account</span>
                 <span className="linride-cta-copy block">Passenger, driver/rider, or business</span>
               </button>
-              <button type="button" onClick={() => setScreen("signin")} className="linride-cta linride-cta-secondary">
+              <button type="button" onClick={() => changeScreen("signin")} className="linride-cta linride-cta-secondary">
                 <span className="linride-cta-title">Sign in</span>
                 <span className="linride-cta-copy block">Access your dashboard</span>
               </button>

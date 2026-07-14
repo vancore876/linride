@@ -114,6 +114,7 @@ import {
 const DRIVER_VERIFICATION_FORM_URL =
   process.env.NEXT_PUBLIC_DRIVER_VERIFICATION_FORM_URL ||
   "https://docs.google.com/forms/d/e/1FAIpQLSdm8uwXbycBV9TTGrHFslDo0-Yudxb3QpU56FIOzoffNq9ymw/viewform?usp=publish-editor";
+const AUTH_RESTORE_TIMEOUT_MS = 5_000;
 
 const EMPTY_POINTS_WALLET: PointsWallet = {
   availablePoints: 0,
@@ -744,7 +745,12 @@ export default function Home() {
       return;
     }
 
-    void restoreSignedInProfile()
+    let restoreTimeoutId: number | undefined;
+    const restoreTimeout = new Promise<null>((resolve) => {
+      restoreTimeoutId = window.setTimeout(() => resolve(null), AUTH_RESTORE_TIMEOUT_MS);
+    });
+
+    void Promise.race([restoreSignedInProfile(), restoreTimeout])
       .then(async (result) => {
         if (!active || !result) return;
         if (result.profile?.role === "admin") {
@@ -758,11 +764,13 @@ export default function Home() {
         if (active) setAppMessage("Could not restore your Lin Ride sign-in. Please sign in again.");
       })
       .finally(() => {
+        if (restoreTimeoutId) window.clearTimeout(restoreTimeoutId);
         if (active) setAuthRestoreComplete(true);
       });
 
     return () => {
       active = false;
+      if (restoreTimeoutId) window.clearTimeout(restoreTimeoutId);
     };
   }, [activateAuthenticatedAccount, localPreview]);
 
@@ -1189,6 +1197,7 @@ export default function Home() {
           setAppMessage("Enter your name and phone number to sign up.");
           return;
         }
+        setAppMessage(null);
         const result =
           options.authMode === "signin"
             ? await signInWithProfile({
@@ -1252,6 +1261,7 @@ export default function Home() {
       <WelcomeScreen
         onChooseRole={(role, options) => enterRole(role, options)}
         onGoogleSignIn={(role, options) => enterWithGoogle(role, options)}
+        onClearMessage={() => setAppMessage(null)}
         message={appMessage}
         theme={theme}
         onToggleTheme={toggleTheme}

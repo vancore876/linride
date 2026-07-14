@@ -70,7 +70,9 @@ function friendlyAuthMessage(error: unknown, fallback: string) {
   if (code === "email_address_not_authorized") {
     return "This email address cannot be used right now. Continue with Google or use another email.";
   }
-  if (code === "invalid_credentials") return "Email or password is incorrect.";
+  if (code === "invalid_credentials") {
+    return "Email or password is incorrect. For a Gmail account, you can use Continue with Google.";
+  }
   if (code === "user_already_exists" || code === "email_exists") {
     return "An account with this email already exists. Sign in instead.";
   }
@@ -477,6 +479,11 @@ export async function signUpWithProfile(params: {
   if (!signUp.data.session) {
     const completedSignIn = await signInWithCompletedPassword(client, params.email, params.password);
     if (completedSignIn.error || !completedSignIn.data.user) {
+      if (authErrorCode(completedSignIn.error) === "invalid_credentials") {
+        throw new Error(
+          "This email already has a Lin Ride account, but that password does not match. Use the original password or Continue with Google."
+        );
+      }
       throw new Error(friendlyAuthMessage(completedSignIn.error, "Could not open your new Lin Ride account."));
     }
     const profile = await loadOrCreateProfile(client, completedSignIn.data.user, {
