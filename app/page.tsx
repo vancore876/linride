@@ -1204,7 +1204,7 @@ export default function Home() {
                 role
               });
         if (!result.profile) {
-          setAppMessage("Account created. Check your email for the confirmation link, then return to Lin Ride and sign in.");
+          setAppMessage("Your account was created, but the dashboard could not be opened. Sign in again to continue.");
           return;
         }
         if (result.profile?.role === "admin") {

@@ -51,10 +51,10 @@ function authErrorCode(error: unknown) {
 function friendlyAuthMessage(error: unknown, fallback: string) {
   const code = authErrorCode(error);
   if (code === "email_not_confirmed") {
-    return "This account already exists, but its email is not confirmed. Use the newest Lin Ride confirmation email in your inbox or spam folder.";
+    return "This account is still being activated. Try signing in again or continue with Google.";
   }
   if (code === "over_email_send_rate_limit") {
-    return "Too many confirmation emails were requested. Use the newest email already sent, or wait up to one hour before trying again.";
+    return "Too many signup attempts were made. Wait a few minutes, then try again or continue with Google.";
   }
   if (code === "over_request_rate_limit") {
     return "Too many requests were made. Wait a few minutes, then try again.";
@@ -69,6 +69,31 @@ function friendlyAuthMessage(error: unknown, fallback: string) {
 
   const message = error instanceof Error ? error.message : "";
   return message || fallback;
+}
+
+async function completePendingPasswordAccount(email: string, password: string) {
+  const response = await fetch("/api/auth/complete-signup", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ email, password })
+  });
+  const result = await response.json().catch(() => null) as { error?: string } | null;
+  if (!response.ok) {
+    throw new Error(result?.error || "Could not activate this Lin Ride account.");
+  }
+}
+
+async function signInWithCompletedPassword(
+  client: ReturnType<typeof requireSupabase>,
+  email: string,
+  password: string
+) {
+  let signIn = await client.auth.signInWithPassword({ email, password });
+  if (authErrorCode(signIn.error) === "email_not_confirmed") {
+    await completePendingPasswordAccount(email, password);
+    signIn = await client.auth.signInWithPassword({ email, password });
+  }
+  return signIn;
 }
 
 function publicAccountRole(value: unknown, fallback: Role): Exclude<Role, "admin"> {
@@ -399,10 +424,7 @@ export async function signUpWithProfile(params: {
   const role = params.role === "admin" ? "rider" : params.role;
   await client.auth.signOut({ scope: "local" });
 
-  const existingSignIn = await client.auth.signInWithPassword({
-    email: params.email,
-    password: params.password
-  });
+  const existingSignIn = await signInWithCompletedPassword(client, params.email, params.password);
   if (!existingSignIn.error && existingSignIn.data.user) {
     const profile = await loadOrCreateProfile(client, existingSignIn.data.user, {
       role,
@@ -410,9 +432,6 @@ export async function signUpWithProfile(params: {
       phone: params.phone
     });
     return { user: existingSignIn.data.user, profile, requiresEmailConfirmation: false as const };
-  }
-  if (authErrorCode(existingSignIn.error) === "email_not_confirmed") {
-    throw new Error(friendlyAuthMessage(existingSignIn.error, "Confirm your email before signing in."));
   }
   if (existingSignIn.error && authErrorCode(existingSignIn.error) !== "invalid_credentials") {
     throw new Error(friendlyAuthMessage(existingSignIn.error, "Could not check this Lin Ride account."));
@@ -431,12 +450,33 @@ export async function signUpWithProfile(params: {
     }
   });
 
+  if ((signUp.error || !signUp.data.user) && authErrorCode(signUp.error) === "over_email_send_rate_limit") {
+    const completedSignIn = await signInWithCompletedPassword(client, params.email, params.password);
+    if (!completedSignIn.error && completedSignIn.data.user) {
+      const profile = await loadOrCreateProfile(client, completedSignIn.data.user, {
+        role,
+        fullName: params.fullName,
+        phone: params.phone
+      });
+      return { user: completedSignIn.data.user, profile, requiresEmailConfirmation: false as const };
+    }
+  }
+
   if (signUp.error || !signUp.data.user) {
     throw new Error(friendlyAuthMessage(signUp.error, "Could not create your Lin Ride account."));
   }
 
   if (!signUp.data.session) {
-    return { user: signUp.data.user, profile: null, requiresEmailConfirmation: true as const };
+    const completedSignIn = await signInWithCompletedPassword(client, params.email, params.password);
+    if (completedSignIn.error || !completedSignIn.data.user) {
+      throw new Error(friendlyAuthMessage(completedSignIn.error, "Could not open your new Lin Ride account."));
+    }
+    const profile = await loadOrCreateProfile(client, completedSignIn.data.user, {
+      role,
+      fullName: params.fullName,
+      phone: params.phone
+    });
+    return { user: completedSignIn.data.user, profile, requiresEmailConfirmation: false as const };
   }
 
   const profile = await loadOrCreateProfile(client, signUp.data.user, {
@@ -453,7 +493,7 @@ export async function signInWithProfile(params: {
   fallbackRole: Role;
 }) {
   const client = requireSupabase();
-  const signIn = await client.auth.signInWithPassword({ email: params.email, password: params.password });
+  const signIn = await signInWithCompletedPassword(client, params.email, params.password);
   if (signIn.error || !signIn.data.user) {
     throw new Error(friendlyAuthMessage(signIn.error, "Could not sign in to Lin Ride."));
   }

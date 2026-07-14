@@ -79,6 +79,8 @@ To allow email/password accounts to open immediately without a confirmation emai
 2. Go to **Authentication > Providers > Email**.
 3. Turn **Confirm email** off and save.
 
+Lin Ride also completes credential-matched pending password accounts through its server route when hosted confirmation is still enabled. This requires the private `DATABASE_URL` environment variable and never exposes the database connection to the browser.
+
 To enable the app's **Continue with Google** button:
 
 1. Create a Web OAuth client in Google Auth Platform.

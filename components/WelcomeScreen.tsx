@@ -185,6 +185,8 @@ export function WelcomeScreen({ onChooseRole, onGoogleSignIn, message, theme, on
                   onChange={(event) => setFullName(event.target.value)}
                   className="linride-input"
                   placeholder={signupRole === "business" ? "Business name" : "Full name"}
+                  autoComplete="name"
+                  required
                 />
                 <input
                   value={phone}
@@ -192,6 +194,9 @@ export function WelcomeScreen({ onChooseRole, onGoogleSignIn, message, theme, on
                   onChange={(event) => setPhone(event.target.value)}
                   className="linride-input"
                   placeholder={signupRole === "driver" ? "Real phone number" : "876-000-0000"}
+                  autoComplete="tel"
+                  inputMode="tel"
+                  required
                 />
               </div>
             )}
@@ -232,6 +237,8 @@ export function WelcomeScreen({ onChooseRole, onGoogleSignIn, message, theme, on
                 className="linride-input"
                 placeholder="name@email.com"
                 type="email"
+                autoComplete="email"
+                required
               />
               <input
                 value={password}
@@ -240,6 +247,9 @@ export function WelcomeScreen({ onChooseRole, onGoogleSignIn, message, theme, on
                 className="linride-input"
                 placeholder="Password"
                 type="password"
+                autoComplete={screen === "signup" ? "new-password" : "current-password"}
+                minLength={6}
+                required
               />
             </div>
 
