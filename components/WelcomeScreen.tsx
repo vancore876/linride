@@ -229,6 +229,12 @@ export function WelcomeScreen({ onChooseRole, onGoogleSignIn, message, theme, on
               <span className="h-px flex-1 bg-charcoal/10" />
             </div>
 
+            {screen === "signup" && (
+              <p className="mb-4 rounded-lg bg-linred/10 px-3 py-2 text-xs font-bold leading-5 text-linred">
+                Email signup opens your account here. No verification email is required.
+              </p>
+            )}
+
             <div className="grid gap-3 md:grid-cols-2">
               <input
                 value={email}

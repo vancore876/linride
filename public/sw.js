@@ -1,4 +1,4 @@
-const CACHE_NAME = "linride-offline-v9";
+const CACHE_NAME = "linride-offline-v10";
 const APP_SHELL = ["/", "/manifest.json", "/icon.svg", "/linride-logo.svg", "/offline.html"];
 
 self.addEventListener("install", (event) => {

@@ -20,19 +20,30 @@ export function ServiceWorkerRegistration() {
       return;
     }
 
-    const registerServiceWorker = () => {
-      navigator.serviceWorker.register("/sw.js").catch(() => undefined);
+    let reloading = false;
+    const refreshForNewWorker = () => {
+      if (reloading) return;
+      reloading = true;
+      window.location.reload();
     };
+    const registerServiceWorker = () => {
+      navigator.serviceWorker
+        .register("/sw.js", { updateViaCache: "none" })
+        .then((registration) => registration.update())
+        .catch(() => undefined);
+    };
+
+    navigator.serviceWorker.addEventListener("controllerchange", refreshForNewWorker);
 
     if (document.readyState === "complete") {
       registerServiceWorker();
-      return;
+    } else {
+      window.addEventListener("load", registerServiceWorker, { once: true });
     }
-
-    window.addEventListener("load", registerServiceWorker, { once: true });
 
     return () => {
       window.removeEventListener("load", registerServiceWorker);
+      navigator.serviceWorker.removeEventListener("controllerchange", refreshForNewWorker);
     };
   }, []);
 
