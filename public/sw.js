@@ -1,4 +1,4 @@
-const CACHE_NAME = "linride-offline-v11";
+const CACHE_NAME = "linride-offline-v12";
 const APP_SHELL = ["/", "/manifest.json", "/icon.svg", "/linride-logo.svg", "/offline.html"];
 
 self.addEventListener("install", (event) => {
@@ -17,6 +17,12 @@ self.addEventListener("activate", (event) => {
       .keys()
       .then((keys) => Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))))
       .then(() => self.clients.claim())
+      .then(() => self.clients.matchAll({ type: "window", includeUncontrolled: true }))
+      .then((windows) =>
+        Promise.all(
+          windows.map((client) => ("navigate" in client ? client.navigate(client.url).catch(() => undefined) : undefined))
+        )
+      )
   );
 });
 

@@ -20,20 +20,12 @@ export function ServiceWorkerRegistration() {
       return;
     }
 
-    let reloading = false;
-    const refreshForNewWorker = () => {
-      if (reloading) return;
-      reloading = true;
-      window.location.reload();
-    };
     const registerServiceWorker = () => {
       navigator.serviceWorker
         .register("/sw.js", { updateViaCache: "none" })
         .then((registration) => registration.update())
         .catch(() => undefined);
     };
-
-    navigator.serviceWorker.addEventListener("controllerchange", refreshForNewWorker);
 
     if (document.readyState === "complete") {
       registerServiceWorker();
@@ -43,7 +35,6 @@ export function ServiceWorkerRegistration() {
 
     return () => {
       window.removeEventListener("load", registerServiceWorker);
-      navigator.serviceWorker.removeEventListener("controllerchange", refreshForNewWorker);
     };
   }, []);
 
