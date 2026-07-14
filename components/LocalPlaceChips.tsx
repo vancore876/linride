@@ -13,13 +13,13 @@ export function LocalPlaceChips({ onSelect }: LocalPlaceChipsProps) {
         <h3 className="text-base font-black">Local pickup points</h3>
         <span className="linride-status-badge linride-status-pending">Linstead</span>
       </div>
-      <div className="flex w-full min-w-0 max-w-full gap-2 overflow-x-auto overscroll-x-contain pb-1">
+      <div className="grid w-full min-w-0 max-w-full grid-cols-1 gap-2 min-[360px]:grid-cols-2">
         {popularPlaces.map((place) => (
           <button
             key={place.name}
             type="button"
             onClick={() => onSelect(place)}
-            className="linride-list-item w-[142px] min-w-[142px] max-w-[142px] text-left"
+            className="linride-list-item w-full min-w-0 max-w-full text-left"
           >
             <MapPin size={16} className="mb-2 text-linred" />
             <p className="text-sm font-black">{place.name}</p>

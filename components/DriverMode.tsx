@@ -136,13 +136,13 @@ export function DriverMode({
     <div className="linride-screen">
       <section className="linride-panel-grid">
         <div className="linride-card">
-          <div className="flex items-start justify-between gap-4">
-            <div>
+          <div className="driver-profile-header flex items-start justify-between gap-4">
+            <div className="min-w-0">
               <div className="mb-3 flex items-center gap-3">
                 {driver.profile.avatarUrl && <Image unoptimized width={56} height={56} src={driver.profile.avatarUrl} alt={`${driver.profile.fullName} profile`} className="h-14 w-14 rounded-full border-4 border-linred object-cover" />}
-                <div>
+                <div className="min-w-0">
                   <p className="linride-eyebrow">Driver / Rider</p>
-                  <h2 className="text-3xl font-black">Welcome, {driver.profile.fullName}</h2>
+                  <h2 className="break-words text-3xl font-black">Welcome, {driver.profile.fullName}</h2>
                 </div>
               </div>
               <p className="mt-2 text-sm font-semibold text-charcoal/62">
@@ -172,15 +172,15 @@ export function DriverMode({
             </button>
           </div>
 
-          <div className="mt-5 grid grid-cols-3 gap-2">
+          <div className="driver-status-grid">
             {[
               ["Documents", driver.documentsStatus],
               ["Account", approved ? "approved" : driver.status],
               ["Pass", hasActivePass ? "active" : subscriptionStatus]
             ].map(([label, value]) => (
-              <div key={label} className="linride-list-item p-3 text-center">
-                <p className="linride-stat-num text-xl">{value}</p>
-                <p className="linride-stat-label">{label}</p>
+              <div key={label} className="driver-status-card">
+                <p className="driver-status-value">{value}</p>
+                <p className="driver-status-label">{label}</p>
               </div>
             ))}
           </div>

@@ -16,7 +16,7 @@ type VehicleTypeSelectorProps = {
 
 export function VehicleTypeSelector({ value, onChange }: VehicleTypeSelectorProps) {
   return (
-    <div className="grid min-w-0 grid-cols-2 gap-2">
+    <div className="grid min-w-0 grid-cols-1 gap-2 min-[360px]:grid-cols-2">
       {options.map((option) => {
         const Icon = option.icon;
         const selected = option.value === value;

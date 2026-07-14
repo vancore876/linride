@@ -401,10 +401,10 @@ export function RiderHome({
             <TripPinCard mode="display" pin={tripPin} verified={tripPinVerified} message={tripPinMessage} onVerify={onVerifyTripPin} />
           )}
 
-          <details className="linride-card min-w-0 max-w-full overflow-hidden">
+          <details className="passenger-more-choices linride-card min-w-0 max-w-full overflow-hidden">
             <summary className="cursor-pointer list-none">
-              <span className="flex items-center justify-between gap-3">
-                <span>
+              <span className="flex min-w-0 max-w-full items-center justify-between gap-3">
+                <span className="min-w-0">
                   <span className="block text-base font-black text-charcoal">More choices</span>
                   <span className="mt-1 block text-xs font-bold leading-5 text-charcoal/55">
                     Vehicle type and quick local places.
@@ -413,7 +413,7 @@ export function RiderHome({
                 <span className="linride-status-badge linride-status-pending shrink-0">Open</span>
               </span>
             </summary>
-            <div className="mt-4 min-w-0 max-w-full space-y-4">
+            <div className="passenger-more-choices-content mt-4 min-w-0 max-w-full space-y-4">
               <section>
                 <h3>Vehicle type</h3>
                 <p className="linride-card-desc">Pick what fits your request.</p>
