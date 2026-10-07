@@ -1,4 +1,4 @@
-import { ArrowLeft, BriefcaseBusiness, Car, CheckCircle2, MapPinned, Moon, Sun, UserRound, Video } from "lucide-react";
+import { ArrowLeft, BriefcaseBusiness, Car, CheckCircle2, Eye, EyeOff, MapPinned, Moon, Sun, UserRound, Video } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import { LINRIDE_TIKTOK } from "@/lib/social";
 import { Role } from "@/types/linride";
@@ -38,6 +38,7 @@ export function WelcomeScreen({ onChooseRole, onGoogleSignIn, onClearMessage, me
   const [phone, setPhone] = useState("");
   const [authBusy, setAuthBusy] = useState(false);
   const [authMethod, setAuthMethod] = useState<"password" | "google" | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
   const authBusyRef = useRef(false);
 
   const activeRole = screen === "signin" ? signinRole : signupRole;
@@ -261,23 +262,46 @@ export function WelcomeScreen({ onChooseRole, onGoogleSignIn, onClearMessage, me
                 autoComplete="email"
                 required
               />
-              <input
-                value={password}
-                disabled={authBusy}
-                onChange={(event) => {
-                  onClearMessage();
-                  setPassword(event.target.value);
-                }}
-                className="linride-input"
-                placeholder="Password"
-                type="password"
-                autoComplete={screen === "signup" ? "new-password" : "current-password"}
-                minLength={6}
-                required
-              />
+              <div className="relative min-w-0">
+                <input
+                  value={password}
+                  disabled={authBusy}
+                  onChange={(event) => {
+                    onClearMessage();
+                    setPassword(event.target.value);
+                  }}
+                  className="linride-input pr-12"
+                  placeholder="Password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete={screen === "signup" ? "new-password" : "current-password"}
+                  minLength={6}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((current) => !current)}
+                  disabled={authBusy}
+                  className="absolute inset-y-0 right-0 grid w-12 place-items-center text-charcoal/60 disabled:opacity-50"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  title={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
             </div>
 
             {message && <p className="mt-4 rounded-2xl bg-linred/10 px-3 py-3 text-sm font-bold text-linred">{message}</p>}
+
+            {screen === "signin" && message?.toLowerCase().includes("google") && (
+              <button
+                type="button"
+                onClick={() => void submitGoogle()}
+                disabled={authBusy}
+                className="mt-3 w-full rounded-lg border border-charcoal/15 bg-white px-4 py-3 text-sm font-black text-ink disabled:cursor-wait disabled:opacity-60"
+              >
+                Sign in with Google instead
+              </button>
+            )}
 
             <button type="submit" disabled={authBusy} className="linride-submit mt-5 disabled:cursor-wait disabled:opacity-60">
               {authBusy && authMethod === "password"

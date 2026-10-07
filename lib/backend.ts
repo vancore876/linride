@@ -71,7 +71,7 @@ function friendlyAuthMessage(error: unknown, fallback: string) {
     return "This email address cannot be used right now. Continue with Google or use another email.";
   }
   if (code === "invalid_credentials") {
-    return "Email or password is incorrect. For a Gmail account, you can use Continue with Google.";
+    return "Email or password is incorrect. Check the password with Show password, or sign in with Google.";
   }
   if (code === "user_already_exists" || code === "email_exists") {
     return "An account with this email already exists. Sign in instead.";
