@@ -216,12 +216,12 @@ export function RiderHome({
   };
 
   return (
-    <div className="linride-screen">
+    <div className="linride-screen lr2-rider-screen">
       <section className="passenger-intro">
         <div>
-          <p className="linride-eyebrow">Passenger mode</p>
-          <h1>Where to, {rider.fullName.split(" ")[0]}?</h1>
-          <p>Choose your trip, see the real road distance, then find a driver.</p>
+          <p className="linride-eyebrow">EXPLORE · LINRIDE JAMAICA</p>
+          <h1>Good to see you, {rider.fullName.split(" ")[0]}<span className="lr2-wave">.</span></h1>
+          <p>Every corner of Jamaica is a new possibility. Where are we heading?</p>
         </div>
         <div className="passenger-intro-profile">
           {rider.avatarUrl && <Image unoptimized width={58} height={58} src={rider.avatarUrl} alt={`${rider.fullName} profile`} />}
@@ -229,8 +229,9 @@ export function RiderHome({
         </div>
       </section>
 
-      <section className="trip-map-workspace">
-        <div className="map-search-grid">
+      <section className="trip-map-workspace lr2-map-workspace">
+        <div className="lr2-map-heading"><div><span className="lr2-kicker">PLAN YOUR ROUTE</span><h2>Your journey starts here</h2></div><span className="lr2-live-map-badge"><span /> Live map</span></div>
+        <div className="map-search-grid lr2-search-grid">
           <LocationSearch label="Pickup" value={draft.pickup} onChange={(pickup) => updateTripPlace("pickup", pickup)} />
           <LocationSearch label="Destination" value={draft.destination} onChange={(destination) => updateTripPlace("destination", destination)} />
         </div>
@@ -256,7 +257,7 @@ export function RiderHome({
           </div>
         )}
         {selectionMode && <p className="map-workspace-notice">Tap the map to set your {selectionMode}, then drag the pin for the exact spot.</p>}
-        <div className="linride-map-shell">
+        <div className="linride-map-shell lr2-rider-map-shell">
           <LinRideMap
             pickup={draft.pickup}
             destination={draft.destination}
@@ -291,16 +292,16 @@ export function RiderHome({
         </button>
       </section>
 
-      <section className="linride-panel-grid">
+      <section className="linride-panel-grid lr2-booking-grid">
         <div className="linride-card min-w-0 max-w-full">
-          <p className="linride-eyebrow">Start here</p>
-          <h2 className="text-3xl font-black">Hi {rider.fullName}, book your trip.</h2>
+          <p className="linride-eyebrow">02 · CHOOSE YOUR RIDE</p>
+          <h2 className="text-3xl font-black">Make this trip yours.</h2>
           <p className="linride-card-desc mt-2">
-            Fill in pickup, destination, and the price you want to offer.
+            Choose your service, set a comfortable fare, and connect with a driver.
           </p>
 
           <div className="linride-field">
-            <span className="linride-label">1. What do you need?</span>
+            <span className="linride-label">SELECT SERVICE</span>
             <div className="linride-pill-group">{mainServiceTypes.map(renderServiceButton)}</div>
             <details className="mt-3 rounded-2xl bg-smoke p-3">
               <summary className="cursor-pointer list-none text-sm font-black text-charcoal">More services</summary>
@@ -320,7 +321,7 @@ export function RiderHome({
 
           <div className="linride-row-2">
             <div className="linride-field">
-              <span className="linride-label">4. Your fare</span>
+              <span className="linride-label">YOUR OFFER · JMD</span>
               <div className="linride-fare-stepper">
                 <button
                   type="button"
@@ -343,7 +344,7 @@ export function RiderHome({
             </div>
 
             <div className="linride-field">
-              <span className="linride-label">5. Payment</span>
+              <span className="linride-label">PAYMENT METHOD</span>
               <div className="linride-pill-group">
                 {(["Cash", "Transfer"] as const).map((method) => (
                   <button
@@ -360,7 +361,7 @@ export function RiderHome({
           </div>
 
           <button type="button" onClick={onFindDriver} disabled={!route || !pinsConfirmed} className="linride-submit">
-            Find a driver
+            Find my driver
           </button>
           {!pinsConfirmed && <p className="mt-2 text-center text-xs font-bold text-charcoal/50">Confirm the map pins before finding a driver.</p>}
         </div>

@@ -87,7 +87,7 @@ export function BusinessDeliveryForm({
           ? "This business account was not approved. Contact support with updated business details."
           : "This business account is suspended. Contact support for the next step.";
       return (
-        <section className="linride-screen">
+        <section className="linride-screen lr2-business-screen">
           <div className="linride-card-dark">
             <p className="linride-eyebrow">Business delivery</p>
             <h2 className="mt-1 text-3xl font-black">{businessAccount.businessName}</h2>

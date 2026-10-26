@@ -7,9 +7,10 @@ export function getGeoapifyKey() {
   return process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY || "";
 }
 
-export function getGeoapifyStyleUrl() {
+export function getGeoapifyStyleUrl(mode: "streets" | "night" = "streets") {
   const key = getGeoapifyKey();
-  return key ? `https://maps.geoapify.com/v1/styles/osm-bright/style.json?apiKey=${encodeURIComponent(key)}` : "";
+  const style = mode === "night" ? "dark-matter" : "osm-bright";
+  return key ? `https://maps.geoapify.com/v1/styles/${style}/style.json?apiKey=${encodeURIComponent(key)}` : "";
 }
 
 export async function searchJamaicaLocations(
