@@ -3283,3 +3283,48 @@ h4,
 @media(prefers-reduced-motion:reduce){.lr6-gps-actions button,.lr6-gps-candidate button{transition:none!important;transform:none!important}}
 
 .lr6-booking-hint{grid-column:1/-1;margin:0;color:rgb(var(--color-text)/.62);font-size:11px;font-weight:750;text-align:center}
+
+/* V7: Single map-to-booking journey. Ancillary controls are accessible in drawer. */
+.lr7-unified-booking{margin:16px 0 0;padding:20px 0 0;border-top:1px solid var(--lr2-border);min-width:0}
+.lr7-booking-body.lr6-combined-trip-card{background:transparent;border:0;box-shadow:none;border-radius:0;padding:0;margin:0}
+.lr7-booking-title{font-size:clamp(22px,3vw,30px);line-height:1.15;font-weight:900;letter-spacing:-.04em;color:rgb(var(--color-text))}
+.lr7-booking-subtitle{margin:5px 0 0;font-size:12px;line-height:1.5;color:rgb(var(--color-text)/.66);font-weight:650}
+.lr7-unified-booking .map-route-summary{margin:13px 0 0;box-shadow:none;border-radius:15px}
+.lr7-trip-progress{margin-top:13px;min-width:0}
+.lr7-trip-progress:empty{display:none}
+.lr7-trip-progress .driver-offer-selection{margin:0;background:rgb(var(--color-surface));border:1px solid var(--lr2-border);border-radius:15px}
+.lr7-request-status,.lr7-counteroffer{display:flex;align-items:center;justify-content:space-between;gap:12px;background:rgb(var(--color-surface));border:1px solid var(--lr2-border);border-radius:15px;padding:14px;margin-top:12px}
+.lr7-request-status strong,.lr7-counteroffer strong{font-size:14px;font-weight:900;color:rgb(var(--color-text))}
+.lr7-request-status p,.lr7-counteroffer p{font-size:11px;color:rgb(var(--color-text)/.62);line-height:1.5;margin-top:4px}
+.lr7-request-status button,.lr7-counteroffer button{border:1px solid var(--lr2-border);padding:10px 14px;min-height:41px;border-radius:12px;font-size:12px;font-weight:850;color:rgb(var(--color-text));background:rgb(var(--color-page));white-space:nowrap}
+.lr7-counteroffer{display:grid}
+.lr7-counteroffer>div{display:flex;flex-wrap:wrap;gap:8px}
+.lr7-counteroffer>div button:first-child{background:rgb(var(--color-accent));color:#15231a}
+.lr7-sidebar-host{min-width:0;display:block}
+.lr7-sidebar-extras{display:grid;gap:10px;min-width:0}
+.lr7-sidebar-extras>.lr2-sidebar-caption{margin:7px 11px 2px}
+.lr7-sidebar-extras>.passenger-more-choices,.lr7-sidebar-extras .linride-card{margin:0!important;padding:13px!important;max-width:100%;min-width:0;border-radius:14px!important;border:1px solid rgba(220,252,235,.16)!important;background:#19382f!important;color:#ecf7ec!important;box-shadow:none!important}
+.lr7-sidebar-extras .text-charcoal,.lr7-sidebar-extras .linride-card h3,.lr7-sidebar-extras .linride-card h2,.lr7-sidebar-extras .linride-card h4{color:#f3fcf3!important}
+.lr7-sidebar-extras .text-charcoal\/55,.lr7-sidebar-extras .text-charcoal\/65,.lr7-sidebar-extras .linride-card-desc{color:#b8d1c1!important}
+.lr7-sidebar-extras .linride-status-badge{flex-shrink:0;font-size:9px;padding:6px 7px}
+.lr7-sidebar-extras .passenger-more-choices summary>span,.lr7-sidebar-extras .linride-card summary>span{gap:7px;min-width:0}
+.lr7-sidebar-extras .passenger-more-choices-content{min-width:0}
+.lr7-sidebar-extras .linride-field,.lr7-sidebar-extras input,.lr7-sidebar-extras textarea,.lr7-sidebar-extras select,.lr7-sidebar-extras button{max-width:100%;min-width:0}
+.lr7-sidebar-extras .linride-card input,.lr7-sidebar-extras .linride-card select,.lr7-sidebar-extras .linride-card textarea{border-radius:10px}
+.lr7-sidebar-extras .linride-pill{white-space:normal;overflow-wrap:anywhere}
+.lr7-sidebar-extras .linride-submit{font-size:12px;min-height:42px}
+.lr7-sidebar-extras .linride-card>div,.lr7-sidebar-extras .linride-card>section{min-width:0}
+.lr7-sidebar-extras .linride-card p{overflow-wrap:anywhere}
+.lr7-sidebar-extras .linride-card summary{font-size:12px}
+.lr7-sidebar-extras .profile-photo-gate{margin:0}
+@media(max-width:960px){
+  .lr7-unified-booking{padding-top:14px;margin-top:13px}
+  .lr7-unified-booking .map-route-summary{padding:12px}
+  .lr7-booking-title{font-size:23px}
+  .lr7-request-status{align-items:flex-start;flex-direction:column}
+}
+@media(max-width:620px){
+  .lr7-unified-booking .lr6-booking-actions{margin-top:15px;padding-top:15px}
+  .lr7-booking-body .lr6-ride-selector{margin-top:14px}
+  .lr7-unified-booking .map-route-metrics{gap:8px}
+}
