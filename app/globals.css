@@ -2995,3 +2995,118 @@ h4,
     max-width: none;
   }
 }
+
+
+/* LINRIDE V2 — map-first, responsive visual system */
+.lr2-app {
+  --lr2-brand: #087c6e;
+  --lr2-mint: #ddf7ee;
+  --lr2-navy: #102e37;
+  --lr2-border: rgba(33,61,66,.11);
+  background: #f5f8f9;
+  min-height: 100dvh;
+}
+.lr2-app[data-theme="dark"] {
+  --lr2-brand: #56d8b2;
+  --lr2-mint: #173b39;
+  --lr2-navy: #e3faf5;
+  --lr2-border: rgba(207,245,233,.14);
+  background: #0d181e;
+}
+.lr2-frame {display:grid;grid-template-columns:252px minmax(0,1fr);min-height:100dvh}
+.lr2-sidebar {position:sticky;top:0;align-self:start;display:flex;flex-direction:column;height:100dvh;background:#0b2932;color:#f3fffc;padding:26px 16px;z-index:20}
+.lr2-brand {display:flex;align-items:center;gap:12px;padding:5px 11px 40px}
+.lr2-brand-mark {display:grid;place-items:center;width:46px;height:46px;border-radius:16px;background:#b7f6ce;color:#075b54}
+.lr2-brand strong {display:block;font-size:24px;font-weight:900;letter-spacing:-1.1px;line-height:1}
+.lr2-brand strong span {color:#a8f1d2}
+.lr2-brand small {display:block;color:#bed6d5;font-size:11px;font-weight:700;margin-top:4px}
+.lr2-sidebar-caption,.lr2-kicker {font-size:10px;letter-spacing:.17em;font-weight:900}
+.lr2-sidebar-caption {color:#91abad;margin:0 13px 13px}
+.lr2-role-nav {display:grid;gap:7px}
+.lr2-nav-item {display:flex;align-items:center;gap:12px;min-height:66px;padding:11px 12px;border:1px solid transparent;border-radius:18px;background:transparent;color:#d7e6e6;text-align:left;transition:background .2s,color .2s}
+.lr2-nav-item:hover {background:rgba(255,255,255,.08)}
+.lr2-nav-item.is-active {background:#d7f7e8;color:#07564e;box-shadow:0 7px 22px rgba(0,0,0,.13)}
+.lr2-nav-icon {display:grid;place-items:center;flex:0 0 39px;height:39px;border-radius:13px;background:rgba(255,255,255,.08)}
+.lr2-nav-item.is-active .lr2-nav-icon {background:#b3edce}
+.lr2-nav-copy {min-width:0;display:grid;gap:3px}
+.lr2-nav-copy strong {font-size:14px;font-weight:900}
+.lr2-nav-copy small {font-size:11px;opacity:.7}
+.lr2-nav-active-dot {height:7px;width:7px;border-radius:50%;background:#0c816b;margin-left:auto}
+.lr2-sidebar-bottom {display:grid;gap:4px;margin-top:auto}
+.lr2-sidebar-story {display:grid;gap:6px;padding:17px 15px;margin-bottom:12px;background:#1d464b;border-radius:18px;color:#d5fdf1}
+.lr2-sidebar-story strong {font-size:15px}
+.lr2-sidebar-story span {color:#b2d0cf;font-size:12px;line-height:1.5}
+.lr2-side-action {display:flex;align-items:center;gap:11px;padding:11px 13px;color:#bdd8da;border-radius:12px;text-align:left;font-size:12px;font-weight:800}
+.lr2-side-action:hover {background:rgba(255,255,255,.09);color:#fff}
+.lr2-side-action svg:last-child:not(:first-child) {margin-left:auto}
+.lr2-workspace {min-width:0}
+.lr2-header {display:flex;align-items:center;justify-content:space-between;gap:15px;padding:26px clamp(20px,4vw,58px) 19px;background:rgb(var(--color-surface));border-bottom:1px solid var(--lr2-border)}
+.lr2-header-title h1 {font-size:clamp(25px,2.8vw,36px);font-weight:900;line-height:1.1;letter-spacing:-.04em;margin:7px 0}
+.lr2-header-title p {color:rgb(var(--color-text)/.54);font-size:13px;font-weight:650;margin:0}
+.lr2-kicker {color:var(--lr2-brand)}
+.lr2-header-actions {display:flex;align-items:center;gap:11px}
+.lr2-jamaica-chip {display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--lr2-mint);color:var(--lr2-brand);font-size:11px;font-weight:850;border-radius:99px}
+.lr2-pulse-dot,.lr2-live-map-badge span {width:8px;height:8px;background:#18ab80;border-radius:50%;box-shadow:0 0 0 4px rgba(30,186,144,.12)}
+.lr2-icon-action {display:grid;place-items:center;width:42px;height:42px;border-radius:13px;border:1px solid var(--lr2-border);background:rgb(var(--color-surface));color:rgb(var(--color-text));cursor:pointer}
+.lr2-content {width:min(1220px,100%);margin:auto;padding:0 clamp(18px,3.6vw,52px) 65px}
+.lr2-journey {margin-top:16px}
+.lr2-mobile-dock {display:none}
+.lr2-rider-screen {padding-top:24px}
+.lr2-rider-screen .passenger-intro {border:0;border-radius:24px;background:linear-gradient(110deg,#0d655e,#116c75 57%,#174957);color:#fff;padding:28px 30px;box-shadow:0 20px 44px rgba(9,63,69,.16)}
+.lr2-rider-screen .passenger-intro h1 {color:#fff;letter-spacing:-.04em;max-width:560px}
+.lr2-rider-screen .passenger-intro p {color:#d5eeea}
+.lr2-rider-screen .passenger-intro .linride-eyebrow {color:#baf5d7}
+.lr2-wave {color:#b2f2cf}
+.lr2-map-workspace {margin-top:20px;border:1px solid var(--lr2-border);border-radius:25px;padding:20px;background:rgb(var(--color-surface));box-shadow:0 15px 46px rgba(18,41,49,.06)}
+.lr2-map-heading {display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.lr2-map-heading h2 {font-size:clamp(20px,2.3vw,28px);font-weight:900;letter-spacing:-.035em;margin:3px 0}
+.lr2-live-map-badge {display:flex;align-items:center;gap:10px;white-space:nowrap;border-radius:99px;padding:10px 12px;background:var(--lr2-mint);color:var(--lr2-brand);font-size:11px;font-weight:850}
+.lr2-search-grid {gap:12px;margin-bottom:13px}
+.lr2-search-grid .map-search-input-wrap {border-radius:15px;background:rgb(var(--color-page));min-height:59px}
+.lr2-rider-map-shell {border-radius:21px;overflow:hidden}
+.lr2-rider-map-shell .linride-map-stage,.lr2-rider-map-shell .linride-map-canvas {min-height:510px}
+.lr2-booking-grid {align-items:start;gap:20px}
+.lr2-booking-grid .linride-card {border-radius:23px;border-color:var(--lr2-border);box-shadow:0 13px 35px rgba(19,54,59,.055)}
+.lr2-booking-grid .linride-pill {border-radius:13px}
+.lr2-booking-grid .linride-submit,.lr2-rider-screen .map-confirm-button {border-radius:14px;min-height:53px}
+.lr2-map-tools {position:absolute;top:16px;left:16px;z-index:13;max-width:calc(100% - 130px)}
+.lr2-map-style-switch {display:flex;align-items:center;gap:3px;background:rgba(255,255,255,.95);padding:4px;border-radius:13px;box-shadow:0 5px 20px rgba(10,34,35,.16);backdrop-filter:blur(10px)}
+.lr2-map-style-switch button {display:flex;align-items:center;gap:6px;padding:9px 11px;border-radius:9px;color:#43585c;font-size:11px;font-weight:850;white-space:nowrap}
+.lr2-map-style-switch button.active {background:#0e615a;color:white}
+.lr2-map-data {display:flex;align-items:center;gap:5px}
+.lr2-map-workspace .map-marker-controls {margin-bottom:14px}
+.lr2-map-workspace .linride-map-view-switch {top:66px}
+.lr2-map-workspace .linride-map-live-hud {bottom:13px}
+.lr2-app button:focus-visible,.lr2-app a:focus-visible {outline:3px solid #26c69f;outline-offset:3px}
+@media (max-width:960px) {
+  .lr2-frame {grid-template-columns:1fr}
+  .lr2-sidebar {display:none}
+  .lr2-header {padding:20px 20px 16px}
+  .lr2-header-title h1 {font-size:27px}
+  .lr2-content {padding:0 16px 120px}
+  .lr2-mobile-dock {position:fixed;display:flex;align-items:center;justify-content:space-around;gap:3px;bottom:0;left:0;right:0;z-index:110;background:rgb(var(--color-surface)/.97);border-top:1px solid var(--lr2-border);padding:9px 10px calc(9px + env(safe-area-inset-bottom,0px));box-shadow:0 -8px 22px rgba(9,38,43,.07);backdrop-filter:blur(14px)}
+  .lr2-dock-item {min-width:0;flex:1;display:grid;place-items:center;gap:5px;padding:8px 1px;border-radius:12px;color:rgb(var(--color-text)/.58);font-size:10px;font-weight:800}
+  .lr2-dock-item.is-active {color:var(--lr2-brand);background:var(--lr2-mint)}
+  .lr2-rider-screen .passenger-intro {padding:22px}
+}
+@media (max-width:620px) {
+  .lr2-header-title p,.lr2-jamaica-chip,.lr2-desktop-signout {display:none}
+  .lr2-header {min-height:72px}
+  .lr2-header-title h1 {font-size:24px}
+  .lr2-rider-screen {padding-top:15px}
+  .lr2-rider-screen .passenger-intro {border-radius:19px}
+  .lr2-rider-screen .passenger-intro h1 {font-size:28px}
+  .lr2-rider-screen .passenger-intro p {font-size:12px}
+  .lr2-map-workspace {padding:12px;border-radius:18px}
+  .lr2-map-heading {padding:5px}
+  .lr2-map-heading h2 {font-size:20px}
+  .lr2-search-grid {grid-template-columns:1fr}
+  .lr2-rider-map-shell {border-radius:15px}
+  .lr2-rider-map-shell .linride-map-stage,.lr2-rider-map-shell .linride-map-canvas {min-height:390px}
+  .lr2-map-tools {left:9px;top:9px}
+  .lr2-map-style-switch button {padding:8px}
+  .lr2-map-workspace .linride-map-view-switch {top:54px}
+  .lr2-map-data {display:none}
+  .lr2-booking-grid {margin-top:14px}
+}
+@media (prefers-reduced-motion:reduce) {.lr2-app *, .lr2-app *::before, .lr2-app *::after {scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important}}
