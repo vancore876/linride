@@ -3378,3 +3378,9 @@ h4,
 @media(max-width:960px){.lr2-rider-screen .lr8-unified-trip-panel{margin-top:0;padding:11px 10px;border-radius:17px}.lr8-unified-trip-panel .lr8-booking-details{padding-top:15px;margin-top:7px}.lr8-unified-trip-panel .lr2-map-heading h2{font-size:21px}.lr8-places-heading{margin-top:15px}}
 @media(max-width:620px){.lr8-map-extra-controls{top:102px;left:10px}.lr8-unified-trip-panel .map-marker-controls{grid-template-columns:repeat(2,minmax(0,1fr))}.lr8-unified-trip-panel .map-marker-controls button{min-height:43px}.lr8-unified-trip-panel .lr2-rider-map-shell .linride-map-canvas{min-height:clamp(315px,47svh,450px)}}
 @media(prefers-reduced-motion:reduce){.lr8-route-spark,.lr8-unified-trip-panel .linride-map-marker-pickup,.lr8-unified-trip-panel .linride-map-marker-destination{animation:none!important}.lr8-map-place-actions button,.lr8-unified-trip-panel .map-marker-controls button{transition:none!important}}
+
+.lr8-service-choice{margin-top:15px}
+.lr8-route-legend{color:#305e3e!important;gap:4px}
+.lr8-route-legend svg{color:#4dbb56}
+.lr8-unified-trip-panel .map-route-address{display:none}
+@media(max-width:730px){.lr8-route-legend{display:none!important}}
