@@ -63,6 +63,12 @@ type RiderHomeProps = {
   locationNotice?: string | null;
   locationPermission: "unknown" | "requesting" | "granted" | "denied";
   locationCandidate?: Place | null;
+  liveGpsLocation?: Place | null;
+  gpsTrackingEnabled?: boolean;
+  autoFollowGpsPickup?: boolean;
+  gpsUpdatedAt?: number | null;
+  onStopLiveGps?: () => void;
+  onConfirmPickup?: () => void;
   drivers: Driver[];
   acceptedDriver?: Driver | null;
   driverOffers?: DriverOffer[];
@@ -148,6 +154,12 @@ export function RiderHome({
   locationNotice,
   locationPermission,
   locationCandidate,
+  liveGpsLocation,
+  gpsTrackingEnabled = false,
+  autoFollowGpsPickup = false,
+  gpsUpdatedAt,
+  onStopLiveGps,
+  onConfirmPickup,
   drivers,
   acceptedDriver,
   driverOffers = [],
@@ -241,6 +253,8 @@ export function RiderHome({
         <div id="lr3-map-anchor" className="linride-map-shell lr2-rider-map-shell">
           <LinRideMap
             pickup={draft.pickup}
+            liveGpsLocation={liveGpsLocation}
+            gpsTrackingEnabled={gpsTrackingEnabled}
             destination={draft.destination}
             route={route}
             drivers={liveDriverLocations}
@@ -265,8 +279,30 @@ export function RiderHome({
           onUseLocation={onUseCurrentLocation}
           onRefreshRoute={refreshRoute}
           locating={locationPermission === "requesting"}
+          tracking={gpsTrackingEnabled}
         />
-        <div className="lr3-location-panel"><div><strong><Crosshair size={17}/> Location &amp; accuracy</strong><p>{locationPermission === "requesting" ? "Improving your GPS reading…" : locationNotice || "Use device GPS or place the pickup pin for better accuracy."}</p><div className="lr3-location-actions"><button type="button" onClick={onUseCurrentLocation} disabled={locationPermission === "requesting"}>{locationPermission === "requesting" ? "Locating…" : "Retry precise GPS"}</button><button type="button" onClick={() => setSelectionMode("pickup")}>Fine-tune on map</button></div></div>{draft.pickup.accuracyMeters ? <span className={`lr3-accuracy ${draft.pickup.accuracyMeters > 100 ? "low" : ""}`}><Info size={13}/> ±{Math.round(draft.pickup.accuracyMeters)}m reported</span> : <span className="lr3-accuracy low">Manual/unknown</span>}</div>
+        <div className="lr3-location-panel">
+          <div>
+            <strong><Crosshair size={17}/> Your live location
+              <span className={`lr5-gps-badge ${gpsTrackingEnabled ? "on" : ""}`}>{gpsTrackingEnabled ? "LIVE" : "OFF"}</span>
+            </strong>
+            <p>{locationPermission === "requesting" ? "Finding a precise GPS signal…" : locationNotice || (gpsTrackingEnabled ? "Blue dot updates as your phone moves." : "Tap Use my location to begin continuous tracking.")}</p>
+            {gpsTrackingEnabled && <p className="lr5-gps-help">{autoFollowGpsPickup ? "Pickup follows GPS until you set a pin or confirm your trip." : "Your position follows you; the pickup pin stays fixed."} Location updates require the app to remain open.</p>}
+            <div className="lr3-location-actions">
+              <button type="button" onClick={onUseCurrentLocation} disabled={locationPermission === "requesting"}>
+                {locationPermission === "requesting" ? "Finding you…" : gpsTrackingEnabled ? "Reset pickup to GPS" : "Start live GPS"}
+              </button>
+              <button type="button" onClick={() => setSelectionMode("pickup")}>Set pickup manually</button>
+              {gpsTrackingEnabled && onStopLiveGps && <button type="button" onClick={onStopLiveGps}>Stop tracking</button>}
+            </div>
+          </div>
+          <div className="lr5-gps-reading">
+            {liveGpsLocation?.accuracyMeters && gpsTrackingEnabled
+              ? <span className={`lr3-accuracy ${liveGpsLocation.accuracyMeters > 100 ? "low" : ""}`}><Info size={13}/> GPS ±{Math.round(liveGpsLocation.accuracyMeters)} m</span>
+              : <span className="lr3-accuracy low">GPS unavailable</span>}
+            {gpsTrackingEnabled && gpsUpdatedAt && <small>Updated {new Date(gpsUpdatedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</small>}
+          </div>
+        </div>
         {driverLocationError && <p className="map-workspace-notice">{driverLocationError}</p>}
         {locationCandidate && (
           <div className="gps-location-check" role="alert">
@@ -295,7 +331,7 @@ export function RiderHome({
           type="button"
           className={`map-confirm-button ${pinsConfirmed ? "confirmed" : ""}`}
           disabled={!route || routeLoading}
-          onClick={() => setPinsConfirmed(true)}
+          onClick={() => { setPinsConfirmed(true); onConfirmPickup?.(); }}
         >
           {pinsConfirmed ? "Pickup and destination confirmed" : "Confirm pickup and destination"}
         </button>
