@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
@@ -14,7 +15,6 @@ import { MapMarkerControls } from "@/components/maps/MapMarkerControls";
 import { RouteSummaryCard } from "@/components/maps/RouteSummaryCard";
 import { PointsWalletCard } from "@/components/PointsWalletCard";
 import { DriverOfferSelection } from "@/components/DriverOfferSelection";
-import { RideRequestCard } from "@/components/RideRequestCard";
 import { RiderTripScreen } from "@/components/RiderTripScreen";
 import { ServiceHistoryCard } from "@/components/ServiceHistoryCard";
 import { SharedRidePanel } from "@/components/SharedRidePanel";
@@ -59,8 +59,8 @@ type RiderHomeProps = {
   pickupPinRequest?: number;
   draft: RideRequestDraft;
   rideStatus: RideStatus;
+  hasActiveRideRequest?: boolean;
   counterOfferJmd?: number | null;
-  locationNotice?: string | null;
   locationPermission: "unknown" | "requesting" | "granted" | "denied";
   liveGpsLocation?: Place | null;
   gpsTrackingEnabled?: boolean;
@@ -144,8 +144,8 @@ export function RiderHome({
   pickupPinRequest = 0,
   draft,
   rideStatus,
+  hasActiveRideRequest = false,
   counterOfferJmd,
-  locationNotice,
   locationPermission,
   liveGpsLocation,
   gpsTrackingEnabled = false,
@@ -184,9 +184,11 @@ export function RiderHome({
   const tripDriver = acceptedDriver ?? drivers[0];
   const [selectionMode, setSelectionMode] = useState<MapSelectionMode>(null);
   const [pinsConfirmed, setPinsConfirmed] = useState(false);
+  const [sidebarHost, setSidebarHost] = useState<HTMLElement | null>(null);
   const { route, loading: routeLoading, error: routeError, refresh: refreshRoute } = useLinRideRoute(draft.pickup, draft.destination);
   const { locations: liveDriverLocations, error: driverLocationError } = useDriverLocations(acceptedDriver?.id);
 
+  useEffect(() => { setSidebarHost(document.getElementById("lr7-rider-sidebar-host")); }, []);
   useEffect(() => onRouteDetailsChange?.(route), [onRouteDetailsChange, route]);
   useEffect(() => setPinsConfirmed(false), [draft.destination.lat, draft.destination.lng, draft.pickup.lat, draft.pickup.lng]);
   useEffect(() => {
@@ -271,13 +273,10 @@ export function RiderHome({
         />
         {driverLocationError && <p className="map-workspace-notice">{driverLocationError}</p>}
         {selectionMode && <p className="map-workspace-notice">Tap the map to set your {selectionMode}, then drag the pin for the exact spot.</p>}
-      </section>
-
-      <section className="lr6-booking-flow">
-        <div className="linride-card lr6-combined-trip-card min-w-0 max-w-full">
-          <p className="linride-eyebrow">02 · PLAN &amp; BOOK</p>
-          <h2 className="lr6-booking-title">Trip details &amp; ride options</h2>
-          <p className="linride-card-desc mt-2">Review your route, choose a ride, and send your fare offer.</p>
+        <section className="lr7-unified-booking" aria-labelledby="lr7-booking-title">
+        <div className="lr7-booking-body min-w-0 max-w-full">
+          <h2 className="lr7-booking-title" id="lr7-booking-title">Your trip</h2>
+          <p className="lr7-booking-subtitle">Check your route, choose a ride and book.</p>
           <RouteSummaryCard
             pickup={draft.pickup}
             destination={draft.destination}
@@ -368,7 +367,7 @@ export function RiderHome({
           </div>
         </div>
 
-        <div className="min-w-0 max-w-full space-y-4">
+        <div className="lr7-trip-progress min-w-0 max-w-full space-y-4">
         {driverOffers.length > 0 && onSelectDriverOffer && (
           <DriverOfferSelection
             offers={driverOffers}
@@ -377,17 +376,22 @@ export function RiderHome({
             onDecline={onDeclineDriverOffer}
           />
         )}
-        <RideRequestCard
-          draft={draft}
-          status={rideStatus}
-          counterOfferJmd={counterOfferJmd}
-          locationNotice={locationNotice}
-          locationPermission={locationPermission}
-          onFindDriver={onFindDriver}
-          onAcceptCounter={onAcceptCounter}
-          onDeclineCounter={onDeclineCounter}
-          onCancel={onCancel}
-        />
+        {hasActiveRideRequest && !activeTrip && driverOffers.length === 0 && rideStatus !== "countered" && (
+          <div className="lr7-request-status" role="status">
+            <div><strong>Finding available drivers</strong><p>We will show driver responses here when they arrive.</p></div>
+            <button type="button" onClick={() => void Promise.resolve(onCancel()).catch(() => undefined)}>Cancel request</button>
+          </div>
+        )}
+        {rideStatus === "countered" && counterOfferJmd != null && !activeTrip && (
+          <div className="lr7-counteroffer" role="status">
+            <strong>Driver suggested J${counterOfferJmd.toLocaleString()}</strong>
+            <p>Review the updated fare before accepting.</p>
+            <div>
+              <button type="button" onClick={onAcceptCounter}>Accept counteroffer</button>
+              <button type="button" onClick={onDeclineCounter}>Decline</button>
+            </div>
+          </div>
+        )}
 
           {rideStatus === "accepted" && tripDriver && (
             <RiderTripScreen
@@ -403,7 +407,13 @@ export function RiderHome({
           {rideStatus === "accepted" && activeTrip && !activeTrip.pinVerified && !["in_progress", "completed", "cancelled"].includes(activeTrip.status) && (
             <TripPinCard mode="display" pin={tripPin} verified={tripPinVerified} message={tripPinMessage} onVerify={onVerifyTripPin} />
           )}
+        </div>
+        </section>
+      </section>
 
+      {sidebarHost && createPortal(
+        <div className="lr7-sidebar-extras">
+          <span className="lr2-sidebar-caption">MORE FOR RIDERS</span>
           <details className="passenger-more-choices linride-card min-w-0 max-w-full overflow-hidden">
             <summary className="cursor-pointer list-none">
               <span className="flex min-w-0 max-w-full items-center justify-between gap-3">
@@ -425,13 +435,10 @@ export function RiderHome({
               <LocalPlaceChips onSelect={(destination) => onDraftChange({ ...draft, destination })} />
             </div>
           </details>
-        </div>
-      </section>
-
       <div className="mt-4 space-y-4">
         <SimpleSection
-          title="Optional trip details"
-          helper="Use this only when the trip needs extra details."
+          title="Advanced trip settings"
+          helper="Special service preferences and additional fare details."
           defaultOpen={showErrandDetails}
         >
           <ZonePricingCard destination={draft.destination} boostTags={draft.boostTags} />
@@ -447,7 +454,7 @@ export function RiderHome({
             balance={pointsWallet.availablePoints}
             unitLabel="points"
             minimumAmount={pointsRules.minimumWithdrawalPoints}
-            conversionHelp={`${pointsRules.minimumWithdrawalPoints.toLocaleString()} points minimum. ${pointsRules.pointsToJmdRate} point equals JMD $${pointsRules.pointsToJmdRate}.`}
+            conversionHelp={`${pointsRules.minimumWithdrawalPoints.toLocaleString()} points minimum. ${pointsRules.pointsToJmdRate} point equals JMD ${pointsRules.pointsToJmdRate}.`}
             requests={withdrawalRequests}
             onSubmit={onRequestWithdrawal}
           />
@@ -456,6 +463,9 @@ export function RiderHome({
 
         <SupportButton tickets={supportTickets} onCreateTicket={onCreateSupportTicket} />
       </div>
+        </div>,
+        sidebarHost
+      )}
     </div>
   );
 }
