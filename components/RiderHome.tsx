@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import { BriefcaseBusiness, Car, GraduationCap, Package, Route, Search, ShoppingBag, Truck, Zap } from "lucide-react";
+import { BriefcaseBusiness, Car, GraduationCap, Package, Route, Search, ShoppingBag, Truck, Zap, LocateFixed, MapPin, Navigation, Crosshair, Info } from "lucide-react";
 import { BankWithdrawalCard, WithdrawalFormValues } from "@/components/BankWithdrawalCard";
 import { BoostTagSelector } from "@/components/BoostTagSelector";
 import { CountryServiceDetailsCard } from "@/components/CountryServiceDetailsCard";
@@ -229,6 +229,7 @@ export function RiderHome({
         </div>
       </section>
 
+      <div className="lr3-mobile-shortcuts" aria-label="Quick trip actions"><button type="button" onClick={onUseCurrentLocation}><LocateFixed size={17}/> Update GPS</button><button type="button" onClick={() => { setSelectionMode("pickup"); document.getElementById("lr3-map-anchor")?.scrollIntoView({ behavior: "smooth", block: "center" }); }}><MapPin size={17}/> Set pickup pin</button><button type="button" onClick={() => document.getElementById("lr3-map-anchor")?.scrollIntoView({ behavior: "smooth", block: "center" })}><Navigation size={17}/> View map</button></div>
       <section className="trip-map-workspace lr2-map-workspace">
         <div className="lr2-map-heading"><div><span className="lr2-kicker">PLAN YOUR ROUTE</span><h2>Your journey starts here</h2></div><span className="lr2-live-map-badge"><span /> Live map</span></div>
         <div className="map-search-grid lr2-search-grid">
@@ -242,7 +243,8 @@ export function RiderHome({
           onRefreshRoute={refreshRoute}
           locating={locationPermission === "requesting"}
         />
-        {(locationNotice || driverLocationError) && <p className="map-workspace-notice">{locationNotice || driverLocationError}</p>}
+        <div className="lr3-location-panel"><div><strong><Crosshair size={17}/> Location &amp; accuracy</strong><p>{locationPermission === "requesting" ? "Improving your GPS reading…" : locationNotice || "Use device GPS or place the pickup pin for better accuracy."}</p><div className="lr3-location-actions"><button type="button" onClick={onUseCurrentLocation} disabled={locationPermission === "requesting"}>{locationPermission === "requesting" ? "Locating…" : "Retry precise GPS"}</button><button type="button" onClick={() => setSelectionMode("pickup")}>Fine-tune on map</button></div></div>{draft.pickup.accuracyMeters ? <span className={`lr3-accuracy ${draft.pickup.accuracyMeters > 100 ? "low" : ""}`}><Info size={13}/> ±{Math.round(draft.pickup.accuracyMeters)}m reported</span> : <span className="lr3-accuracy low">Manual/unknown</span>}</div>
+        {driverLocationError && <p className="map-workspace-notice">{driverLocationError}</p>}
         {locationCandidate && (
           <div className="gps-location-check" role="alert">
             <div>
@@ -257,7 +259,7 @@ export function RiderHome({
           </div>
         )}
         {selectionMode && <p className="map-workspace-notice">Tap the map to set your {selectionMode}, then drag the pin for the exact spot.</p>}
-        <div className="linride-map-shell lr2-rider-map-shell">
+        <div id="lr3-map-anchor" className="linride-map-shell lr2-rider-map-shell">
           <LinRideMap
             pickup={draft.pickup}
             destination={draft.destination}
