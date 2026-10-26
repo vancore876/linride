@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
 import "./globals.css";
+import "./auth-refresh.css";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 export const metadata: Metadata = {
