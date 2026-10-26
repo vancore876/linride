@@ -255,11 +255,19 @@ export default function Home() {
     if (resolvedRole === "admin") return false;
 
     if (resolvedRole === "driver") {
-      const driver = await ensureDriverProfile(result.user.id);
-      const account = await fetchDriverAccount(driver.id);
-      setDriverRecord({ id: driver.id });
-      setDriverAccount(account);
-      setDriverSubStatus(account.subscriptionStatus);
+      try {
+        const driver = await ensureDriverProfile(result.user.id);
+        const account = await fetchDriverAccount(driver.id);
+        setDriverRecord({ id: driver.id });
+        setDriverAccount(account);
+        setDriverSubStatus(account.subscriptionStatus);
+      } catch {
+        // Authentication succeeded. Driver setup can be retried from the driver
+        // workspace rather than trapping the user on the sign-in screen.
+        setDriverRecord(null);
+        setDriverAccount(null);
+        setDriverSubStatus("inactive");
+      }
       setOnline(false);
     } else {
       setDriverRecord(null);
