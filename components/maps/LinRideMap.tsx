@@ -173,9 +173,9 @@ export default function LinRideMap({
   const lastGpsFocusRef = useRef<string | null>(null);
   const selectionModeRef = useRef(selectionMode);
   const callbacksRef = useRef({ onMapSelect, onPickupMove, onDestinationMove });
-  const perspectiveRef = useRef<"3d" | "2d">("3d");
+  const perspectiveRef = useRef<"3d" | "2d">("2d");
   const [ready, setReady] = useState(false);
-  const [perspective, setPerspective] = useState<"3d" | "2d">("3d");
+  const [perspective, setPerspective] = useState<"3d" | "2d">("2d");
   const [mapStyle, setMapStyle] = useState<"streets" | "night">("streets");
   const [followAssigned, setFollowAssigned] = useState(Boolean(assignedDriverId));
   const [mapError, setMapError] = useState<string | null>(null);
@@ -223,12 +223,12 @@ export default function LinRideMap({
         activeMap = new maplibregl.Map({
           container,
           style: getGeoapifyStyleUrl(mapStyle),
-          center: LINSTEAD_CENTER,
-          zoom: 13.4,
+          center: validPlace(pickup) ? [pickup!.lng, pickup!.lat] : LINSTEAD_CENTER,
+          zoom: validPlace(pickup) ? 15.2 : 13.4,
           pitch: is3D ? 48 : 0,
           bearing: is3D ? -18 : 0,
           maxPitch: 70,
-          maxZoom: 19,
+          maxZoom: 20,
           attributionControl: false,
           canvasContextAttributes: {
             antialias: false,
@@ -260,7 +260,7 @@ export default function LinRideMap({
       activeMap.addControl(
         new maplibregl.GeolocateControl({
           positionOptions: { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 },
-          trackUserLocation: true,
+          trackUserLocation: false,
           showUserLocation: true,
           showAccuracyCircle: true
         }),
@@ -539,7 +539,7 @@ export default function LinRideMap({
 
   return (
     <div className="linride-map-stage">
-      <div ref={containerRef} className="linride-map-canvas" aria-label="Lin Ride detailed 3D trip map" />
+      <div ref={containerRef} className="linride-map-canvas" aria-label="LinRide interactive Jamaica route map. Tap Set pickup or Set destination before choosing a map location." />
       {mapError ? (
         <div className="linride-map-config linride-map-recovery" role="alert">
           <MapIcon size={28} aria-hidden="true" />
@@ -565,7 +565,7 @@ export default function LinRideMap({
           </div>
           <div className="linride-map-live-hud">
             <span className="linride-map-live-count"><Radio size={14} /> {drivers.length} live {drivers.length === 1 ? "driver" : "drivers"}</span>
-            <span className="lr2-map-data"><ShieldCheck size={13} /> GPS locations, not simulated</span>
+            <span className="lr2-map-data"><ShieldCheck size={13} /> Location accuracy varies by device</span>
             {distanceKm != null && durationMinutes != null && (
               <span>{distanceKm.toFixed(1)} km <b>{durationMinutes} min</b></span>
             )}

@@ -928,6 +928,11 @@ export default function Home() {
         }
       });
       const { latitude, longitude, accuracy } = position.coords;
+      if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || latitude < 17.6 || latitude > 18.6 || longitude < -78.5 || longitude > -76.1) {
+        setLocationPermission("denied");
+        setLocationNotice("Your device reported a location outside Jamaica. Your pickup was not changed. Check device location settings or drop the pickup pin manually.");
+        return;
+      }
       const accuracyLabel = formatLocationAccuracy(accuracy);
       setLocationNotice(`GPS found within about ${accuracyLabel}. Looking up the nearest mapped address...`);
       const pickup = await reverseGeocodeJamaica(latitude, longitude).catch(() => ({
@@ -947,7 +952,7 @@ export default function Home() {
       const mismatchMeters = hasCurrentPickup
         ? distanceBetweenCoordinatesMeters(currentPickup.lat, currentPickup.lng, latitude, longitude)
         : 0;
-      const needsConfirmation = accuracy > 250 || mismatchMeters > Math.max(3000, accuracy * 3);
+      const needsConfirmation = accuracy > 100 || mismatchMeters > Math.max(1500, accuracy * 3);
 
       if (needsConfirmation) {
         const mismatchLabel = mismatchMeters >= 1000
@@ -969,8 +974,8 @@ export default function Home() {
       const code = geolocationErrorCode(error);
       setLocationNotice(
         code === 1
-          ? "Location permission is off. Allow location for localhost in your browser settings, then try again."
-          : "A reliable GPS position was not found. Move near a window and retry, or set the pickup pin manually."
+          ? "Location permission is off. Allow location for this LinRide website in your browser settings and enable Precise Location on your phone, then retry."
+          : "A reliable GPS position was not found. Enable your phone’s precise location, move outdoors or near a window, retry GPS, or position the pickup pin manually."
       );
       if (options.startSearch) setRideStatus("reviewing");
     }
