@@ -3168,3 +3168,58 @@ h4,
 .lr2-map-workspace .map-marker-controls button{min-width:0;justify-content:center}
 }
 @media(prefers-reduced-motion:reduce){.lr2-app .lr2-sidebar{transition:none}}
+
+/* V4: map-first mobile booking and account settings tucked in the drawer */
+.lr4-sidebar-extras{margin:16px 0 20px;display:grid;gap:9px}
+.lr4-sidebar-extras>.lr2-sidebar-caption{margin-bottom:2px}
+.lr4-account-summary{display:flex;gap:11px;align-items:center;padding:11px 12px;border-radius:16px;background:rgba(255,255,255,.065);margin:0 3px 5px}
+.lr4-account-summary strong{display:block;font-size:13px;color:#f5fff9;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lr4-account-summary small{display:block;font-size:11px;color:#b8d3cd;margin-top:3px}
+.lr4-account-avatar{width:36px;height:36px;flex:0 0 36px;background:#d1f7df;border-radius:12px;display:grid;place-items:center;color:#0b6150}
+.lr4-sidebar-details{border-radius:15px;border:1px solid rgba(202,239,227,.16);background:rgba(255,255,255,.04);overflow:hidden}
+.lr4-sidebar-details>summary{display:flex;cursor:pointer;list-style:none;align-items:center;gap:10px;min-height:47px;padding:10px 13px;font-weight:800;font-size:12px;color:#e6f9ec}
+.lr4-sidebar-details>summary::-webkit-details-marker{display:none}
+.lr4-sidebar-details>summary>svg:last-child{margin-left:auto;transition:transform .2s}
+.lr4-sidebar-details[open]>summary>svg:last-child{transform:rotate(90deg)}
+.lr4-sidebar-tools{padding:0 10px 12px}
+.lr4-sidebar-tools .profile-photo-manager{display:grid;grid-template-columns:1fr;gap:12px;margin:0;padding:12px;border-radius:12px;background:#183a35;color:#e9f8ed;border-color:rgba(219,248,231,.17);box-shadow:none}
+.lr4-sidebar-tools .profile-photo-manager-summary{gap:9px}
+.lr4-sidebar-tools .profile-photo-manager .profile-photo-gate-icon{width:45px;height:45px;flex:0 0 45px}
+.lr4-sidebar-tools .profile-photo-manager h2{font-size:13px;color:#f2fcf5}
+.lr4-sidebar-tools .profile-photo-manager-summary p:last-child{font-size:10px;color:#aecac0}
+.lr4-sidebar-tools .profile-photo-manager .linride-eyebrow{font-size:9px;color:#c4fa8b}
+.lr4-sidebar-tools .profile-photo-manager-actions{display:grid;grid-template-columns:1fr;gap:7px}
+.lr4-sidebar-tools .profile-photo-picker{color:#e6f9ec;border-color:rgba(220,246,226,.23)}
+.lr4-sidebar-tools .profile-photo-remove{background:rgba(182,48,48,.15);color:#ffb6b6}
+.lr4-sidebar-tools .linride-card{margin:0!important;padding:12px!important;border-color:rgba(220,246,226,.14);background:#183a35;color:#f4faf6}
+.lr4-sidebar-tools .linride-card .text-charcoal{color:#f1fbf4}
+.lr4-sidebar-tools .linride-card .text-charcoal\/58{color:#b5d0c4}
+.lr4-sidebar-tools .linride-card>div{flex-direction:column;align-items:flex-start}
+.lr4-sidebar-tools .linride-card button{min-height:40px;border-radius:12px}
+.lr4-sidebar-map-actions{display:grid;gap:6px;margin-top:9px}
+.lr4-sidebar-map-actions .lr2-sidebar-caption{margin:5px 13px 4px}
+.lr4-sidebar-map-actions button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;color:#e4f8ee;padding:11px 13px;border-radius:12px;font-size:12px;font-weight:800}
+.lr4-sidebar-map-actions button:hover,.lr4-sidebar-details>summary:hover{background:rgba(235,255,239,.1)}
+.lr4-map-hint{padding:9px 4px 12px;font-size:11px;color:rgb(var(--color-text)/.65);font-weight:750}
+.lr2-rider-map-shell{scroll-margin-top:90px}
+.lr4-sidebar-extras button:focus-visible,.lr4-sidebar-extras summary:focus-visible{outline:3px solid #b6f58b;outline-offset:2px}
+@media(min-width:961px){.lr2-sidebar{overflow-y:auto;scrollbar-width:thin}.lr4-sidebar-tools .profile-photo-manager-actions{grid-template-columns:1fr}}
+@media(max-width:960px){
+.lr2-app .lr2-mobile-dock{display:none}
+.lr2-app .lr2-sidebar{overflow-y:auto;overscroll-behavior:contain;padding-bottom:max(35px,env(safe-area-inset-bottom))}
+.lr2-content{padding-bottom:55px}
+.lr2-rider-screen .passenger-intro{display:none}
+.lr2-rider-screen{padding-top:0}
+.lr2-map-workspace{margin-top:10px}
+.lr2-rider-map-shell .linride-map-stage,.lr2-rider-map-shell .linride-map-canvas{min-height:clamp(300px,46svh,490px)}
+.lr4-map-hint{font-size:11px}
+}
+@media(max-width:620px){
+.lr2-content{padding:0 10px 60px}
+.lr2-header{min-height:64px}
+.lr2-map-workspace{padding:9px;border-radius:17px}
+.lr2-map-heading{margin-bottom:9px}
+.lr2-map-heading h2{font-size:19px}
+.lr2-rider-map-shell .linride-map-stage,.lr2-rider-map-shell .linride-map-canvas{min-height:clamp(290px,45svh,450px)}
+}
+@media(prefers-reduced-motion:reduce){.lr4-sidebar-details>summary>svg:last-child{transition:none}}
