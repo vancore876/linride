@@ -43,10 +43,12 @@ export function getPreciseCurrentPosition({
 
     let bestPosition: GeolocationPosition | null = null;
     let watchId: number | null = null;
+    let fallbackTimerId: number | null = null;
     let settled = false;
 
     const cleanup = () => {
       window.clearTimeout(timeoutId);
+      if (fallbackTimerId !== null) window.clearTimeout(fallbackTimerId);
       if (watchId != null) navigator.geolocation.clearWatch(watchId);
     };
     const finish = (position?: GeolocationPosition, error?: unknown) => {
@@ -69,7 +71,11 @@ export function getPreciseCurrentPosition({
           bestPosition = position;
           onSample?.(position);
         }
+        // Allow a short refinement window, but do not keep users waiting unnecessarily.
         if (accuracy <= targetAccuracyMeters) finish(position);
+        else if (accuracy <= 70 && fallbackTimerId === null) {
+          fallbackTimerId = window.setTimeout(() => { if (bestPosition) finish(bestPosition); }, 2600);
+        }
       },
       (error) => {
         if (error.code === error.PERMISSION_DENIED) {
