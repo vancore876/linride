@@ -1411,7 +1411,7 @@ export default function Home() {
       accountTools={profile?.avatar_url ? profilePhotoTools : null}
       notificationTools={notificationTools}
       onUseCurrentLocation={() => void requestRiderLocation({ startSearch: false })}
-      onSetPickupPin={() => setPickupPinRequest((current) => current + 1)}
+      onSetPickupPin={() => { setAutoFollowGpsPickup(false); setPickupPinRequest((current) => current + 1); }}
       onViewMap={() => document.getElementById("lr3-map-anchor")?.scrollIntoView({ behavior: "smooth", block: "start" })}
     >
       {appMessage && <div className="app-message-banner" role="status">{appMessage}</div>}
