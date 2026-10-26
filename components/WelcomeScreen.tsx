@@ -1,4 +1,4 @@
-import { ArrowLeft, BriefcaseBusiness, Car, CheckCircle2, Eye, EyeOff, MapPinned, Moon, Sun, UserRound, Video } from "lucide-react";
+import { ArrowLeft, BriefcaseBusiness, Car, CheckCircle2, Eye, EyeOff, MapPinned, Moon, Sun, UserRound, Video, ShieldCheck, ArrowRight, MapPin } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import { LINRIDE_TIKTOK } from "@/lib/social";
 import { Role } from "@/types/linride";
@@ -31,7 +31,6 @@ const signupRoles: Array<{ label: string; value: Exclude<Role, "admin"> }> = [
 export function WelcomeScreen({ onChooseRole, onGoogleSignIn, onClearMessage, message, theme, onToggleTheme }: WelcomeScreenProps) {
   const [screen, setScreen] = useState<"home" | AuthMode>("home");
   const [signupRole, setSignupRole] = useState<Exclude<Role, "admin">>("rider");
-  const [signinRole, setSigninRole] = useState<Exclude<Role, "admin">>("rider");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -41,12 +40,14 @@ export function WelcomeScreen({ onChooseRole, onGoogleSignIn, onClearMessage, me
   const [showPassword, setShowPassword] = useState(false);
   const authBusyRef = useRef(false);
 
-  const activeRole = screen === "signin" ? signinRole : signupRole;
+  const activeRole = screen === "signin" ? "rider" : signupRole;
   const isDark = theme === "dark";
   const ThemeIcon = isDark ? Sun : Moon;
   const changeScreen = (nextScreen: "home" | AuthMode) => {
+    if (authBusyRef.current) return;
     onClearMessage();
     setScreen(nextScreen);
+    setShowPassword(false);
   };
   const actionCopy = useMemo(() => {
     if (screen === "signup") {
@@ -72,6 +73,8 @@ export function WelcomeScreen({ onChooseRole, onGoogleSignIn, onClearMessage, me
     setAuthMethod(method);
     try {
       await action();
+    } catch {
+      // The parent reports account errors in the accessible form banner.
     } finally {
       authBusyRef.current = false;
       setAuthBusy(false);
@@ -103,9 +106,9 @@ export function WelcomeScreen({ onChooseRole, onGoogleSignIn, onClearMessage, me
     const roleOptions = signupRoles;
 
     return (
-      <main data-theme={theme} className="linride-app-bg min-h-screen text-charcoal transition-colors">
-        <section className="linride-wrap grid min-h-screen gap-6 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
-          <div className="linride-card-dark">
+      <main data-theme={theme} className="linride-app-bg lr3-auth-page min-h-screen text-charcoal transition-colors">
+        <section className="linride-wrap lr3-auth-layout grid min-h-screen gap-6 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+          <div className="linride-card-dark lr3-auth-hero">
             <div className="mb-8 flex items-center justify-between gap-3">
               <button
                 type="button"
@@ -149,7 +152,7 @@ export function WelcomeScreen({ onChooseRole, onGoogleSignIn, onClearMessage, me
           </div>
 
           <form
-            className="linride-card"
+            className="linride-card lr3-auth-form"
             onSubmit={(event) => {
               event.preventDefault();
               void submitAuth();
@@ -159,30 +162,26 @@ export function WelcomeScreen({ onChooseRole, onGoogleSignIn, onClearMessage, me
               <p className="text-xs font-black uppercase tracking-[0.14em] text-linred">Lin Ride Web App</p>
               <h2 className="mt-1 text-3xl font-black">{actionCopy.title}</h2>
               <p className="mt-2 text-sm font-semibold text-charcoal/58">
-                Use one account to reach the dashboard that matches your role.
+                {screen === "signin" ? "Enter your email and password. Your account opens the right dashboard automatically." : "Start with your account type, then add your details."}
               </p>
             </div>
 
-            <label className="block text-sm font-black">
-              {screen === "signup" ? "What are you signing up for?" : "What are you signing in as?"}
-              <select
-                value={activeRole}
-                disabled={authBusy}
-                onChange={(event) => {
-                  onClearMessage();
-                  const role = event.target.value as Exclude<Role, "admin">;
-                  if (screen === "signin") setSigninRole(role);
-                  else setSignupRole(role);
-                }}
-                className="linride-select mt-2"
-              >
-                {roleOptions.map((role) => (
-                  <option key={role.value} value={role.value}>
-                    {role.label}
-                  </option>
-                ))}
-              </select>
-            </label>
+            {screen === "signup" && (
+              <fieldset className="lr3-role-picker">
+                <legend>I'm joining as</legend>
+                <div className="lr3-role-options">
+                  {signupRoles.map((role) => {
+                    const RoleIcon = role.value === "rider" ? UserRound : role.value === "driver" ? Car : BriefcaseBusiness;
+                    return (
+                      <button type="button" key={role.value} className={`lr3-role-option ${signupRole === role.value ? "selected" : ""}`}
+                        aria-pressed={signupRole === role.value} onClick={() => { onClearMessage(); setSignupRole(role.value); }} disabled={authBusy}>
+                        <RoleIcon size={19} /><span>{role.label}</span>{signupRole === role.value && <CheckCircle2 size={16} />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </fieldset>
+            )}
 
             {screen === "signup" && (
               <div className="mt-3 grid gap-3 md:grid-cols-2">
@@ -242,13 +241,9 @@ export function WelcomeScreen({ onChooseRole, onGoogleSignIn, onClearMessage, me
               <span className="h-px flex-1 bg-charcoal/10" />
             </div>
 
-            {screen === "signup" && (
-              <p className="mb-4 rounded-lg bg-linred/10 px-3 py-2 text-xs font-bold leading-5 text-linred">
-                Email signup opens your account here. No verification email is required.
-              </p>
-            )}
 
-            <div className="grid gap-3 md:grid-cols-2">
+
+            <div className="grid gap-3">
               <input
                 value={email}
                 disabled={authBusy}
@@ -290,7 +285,7 @@ export function WelcomeScreen({ onChooseRole, onGoogleSignIn, onClearMessage, me
               </div>
             </div>
 
-            {message && <p className="mt-4 rounded-2xl bg-linred/10 px-3 py-3 text-sm font-bold text-linred">{message}</p>}
+            {message && <p role="alert" className="mt-4 rounded-2xl bg-linred/10 px-3 py-3 text-sm font-bold text-linred">{message}</p>}
 
             {screen === "signin" && message?.toLowerCase().includes("google") && (
               <button
@@ -325,7 +320,7 @@ export function WelcomeScreen({ onChooseRole, onGoogleSignIn, onClearMessage, me
 
   return (
     <main data-theme={theme} className="linride-app-bg min-h-screen text-charcoal transition-colors">
-      <div className="linride-wrap">
+      <div className="linride-wrap lr3-welcome">
         <div className="linride-top-row">
           <div className="linride-logo-pill" role="img" aria-label="LinRide">
             <span className="sr-only">LinRide</span>
@@ -354,14 +349,14 @@ export function WelcomeScreen({ onChooseRole, onGoogleSignIn, onClearMessage, me
           </div>
         </div>
 
-        <section className="linride-hero">
+        <section className="linride-hero lr3-welcome-hero">
           <div>
             <p className="linride-eyebrow">Built for country areas in Jamaica</p>
             <h1 className="linride-headline">
-              Book rides and deliveries <span className="linride-headline-accent">the simple way.</span>
+              Your Jamaica. <span className="linride-headline-accent">Your way to move.</span>
             </h1>
             <p className="linride-sub">
-              Enter where you are going, choose a fair price, and let nearby drivers or riders respond.
+              Book local rides, make deliveries, and connect with drivers in your community.
             </p>
             <div className="linride-cta-row">
               <button type="button" onClick={() => changeScreen("signup")} className="linride-cta linride-cta-primary">
