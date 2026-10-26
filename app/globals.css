@@ -3223,3 +3223,16 @@ h4,
 .lr2-rider-map-shell .linride-map-stage,.lr2-rider-map-shell .linride-map-canvas{min-height:clamp(290px,45svh,450px)}
 }
 @media(prefers-reduced-motion:reduce){.lr4-sidebar-details>summary>svg:last-child{transition:none}}
+
+/* Rider live GPS follows the phone while keeping confirmed pickup pins independent. */
+.linride-device-location-dot{width:19px;height:19px;border-radius:50%;border:3px solid #fff;background:#2189ed;box-shadow:0 0 0 7px rgba(33,137,237,.16),0 2px 9px rgba(0,0,0,.27);position:relative;pointer-events:none}
+.linride-device-location-dot:after{content:"";position:absolute;inset:-11px;border:1px solid rgba(45,154,246,.53);border-radius:50%;animation:lr5-gps-pulse 2.4s ease-out infinite}
+.lr5-gps-badge{font-size:9px;border-radius:99px;padding:4px 7px;background:rgb(var(--color-text)/.08);color:rgb(var(--color-text)/.65);letter-spacing:.07em}
+.lr5-gps-badge.on{background:#16794c;color:#fff}
+.lr5-gps-help{max-width:55ch}
+.lr5-gps-reading{display:flex;flex-direction:column;gap:5px;align-items:flex-end}
+.lr5-gps-reading small{color:rgb(var(--color-text)/.6);font-size:10px;white-space:nowrap}
+.lr3-location-panel strong .lr5-gps-badge{margin-left:4px}
+@keyframes lr5-gps-pulse{from{transform:scale(.55);opacity:.9}to{transform:scale(1.6);opacity:0}}
+@media(max-width:620px){.lr5-gps-reading{align-items:flex-start}.lr3-location-actions{width:100%}.lr3-location-actions button{flex:1}}
+@media(prefers-reduced-motion:reduce){.linride-device-location-dot:after{animation:none}}
