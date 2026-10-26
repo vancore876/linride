@@ -157,6 +157,7 @@ type AuthenticatedAccount = {
 };
 
 export default function Home() {
+  const [bootComplete, setBootComplete] = useState(false);
   const [authRestoreComplete, setAuthRestoreComplete] = useState(isMockMode);
   const [mode, setMode] = useState<AppMode>("welcome");
   const [currentView, setCurrentView] = useState<AppView>("rider");
@@ -245,6 +246,7 @@ export default function Home() {
     fareJmd: trip.agreedFareJmd || 0,
     points: trip.status === "completed" ? 10 : 0
   }));
+  const completeBoot = useCallback(() => setBootComplete(true), []);
   const activateAuthenticatedAccount = useCallback(async (
     result: AuthenticatedAccount,
     fallback: { fullName?: string; phone?: string } = {}
@@ -889,8 +891,8 @@ export default function Home() {
     setAppMessage(status === "approved" ? "Weekly payment approved. The driver pass is active for 7 days." : "Weekly payment rejected.");
   }
 
-  if (!authRestoreComplete) {
-    return <LoadingScreen onContinue={() => setAuthRestoreComplete(true)} />;
+  if (!bootComplete || !authRestoreComplete) {
+    return <LoadingScreen onComplete={completeBoot} />;
   }
 
   function applyRiderGpsPickup(pickup: RideRequestDraft["pickup"]) {
