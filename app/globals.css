@@ -3110,3 +3110,24 @@ h4,
   .lr2-booking-grid {margin-top:14px}
 }
 @media (prefers-reduced-motion:reduce) {.lr2-app *, .lr2-app *::before, .lr2-app *::after {scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important}}
+
+/* Driver / dispatch refreshed surfaces */
+.lr2-driver-intro {display:flex;align-items:center;justify-content:space-between;gap:16px;padding:26px 29px;border-radius:24px;color:white;background:linear-gradient(110deg,#102e37,#155a61)}
+.lr2-driver-intro .lr2-kicker {color:#a2f5d1}
+.lr2-driver-intro h1 {font-size:clamp(25px,3vw,36px);font-weight:900;letter-spacing:-.035em;margin:7px 0}
+.lr2-driver-intro p {font-size:13px;color:#d6e8e8;max-width:470px}
+.lr2-driver-presence {display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:100px;background:rgba(255,255,255,.12);font-size:12px;font-weight:850;white-space:nowrap}
+.lr2-driver-presence>span {width:9px;height:9px;border-radius:50%;background:#a8b6b5}
+.lr2-driver-presence.is-online>span {background:#4bf8b0;box-shadow:0 0 0 5px rgba(75,248,176,.15)}
+.lr2-driver-summary {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:16px}
+.lr2-driver-summary>div {display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:19px 17px;border:1px solid var(--lr2-border);border-radius:18px;background:rgb(var(--color-surface));box-shadow:0 8px 24px rgba(11,43,50,.04)}
+.lr2-driver-summary svg {color:var(--lr2-brand)}
+.lr2-driver-summary span {font-size:12px;color:rgb(var(--color-text)/.55);font-weight:800}
+.lr2-driver-summary strong {font-size:16px;font-weight:900;margin-left:auto}
+.lr2-driver-screen .linride-card,.lr2-business-screen .linride-card {border-radius:21px;border-color:var(--lr2-border);box-shadow:0 12px 35px rgba(10,51,56,.05)}
+.lr2-business-screen .linride-card-dark {border-radius:24px;background:linear-gradient(110deg,#104550,#15333d);box-shadow:0 16px 33px rgba(11,45,52,.13)}
+@media (max-width:760px) {
+ .lr2-driver-intro {align-items:flex-start;flex-direction:column;padding:20px}
+ .lr2-driver-summary {grid-template-columns:1fr}
+ .lr2-driver-summary>div {padding:13px 16px}
+}
