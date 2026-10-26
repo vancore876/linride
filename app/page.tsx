@@ -158,6 +158,7 @@ type AuthenticatedAccount = {
 
 export default function Home() {
   const [bootComplete, setBootComplete] = useState(false);
+  const [pickupPinRequest, setPickupPinRequest] = useState(0);
   const [authRestoreComplete, setAuthRestoreComplete] = useState(isMockMode);
   const [mode, setMode] = useState<AppMode>("welcome");
   const [currentView, setCurrentView] = useState<AppView>("rider");
@@ -1282,30 +1283,9 @@ export default function Home() {
     );
   }
 
-  return (
-    <AppShell
-      currentView={currentView}
-      onChangeView={(view) => void changeView(view)}
-      onBackHome={() => {
-        if (!localPreview) void signOutCurrentUser().catch(() => undefined);
-        setMode("welcome");
-        setProfile(null);
-        setDriverRecord(null);
-        setDriverAccount(null);
-        setDriverOffers([]);
-        setOnline(false);
-        setBusinessAccount(null);
-        setHasBusinessAccount(false);
-        setAcceptedDriver(null);
-      }}
-      allowAdmin={profile?.role === "admin"}
-      theme={theme}
-      onToggleTheme={toggleTheme}
-      journey={journey}
-    >
-      {appMessage && <div className="app-message-banner" role="status">{appMessage}</div>}
-      {!localPreview && profile && (currentView === "rider" || currentView === "driver") && (
-        <ProfilePhotoSetup
+  const profilePhotoTools = !localPreview && profile && (currentView === "rider" || currentView === "driver")
+    ? (
+      <ProfilePhotoSetup
           fullName={profile.full_name || (profile.role === "driver" ? "Driver" : "Passenger")}
           role={currentView === "driver" ? "driver" : profile.role}
           currentPhotoUrl={profile.avatar_url}
@@ -1329,7 +1309,38 @@ export default function Home() {
       )}
       {!localPreview && profile && !requiresProfilePhoto && (currentView === "rider" || currentView === "driver") && (
         <NotificationSettings role={currentView} />
-      )}
+    ) : null;
+  const notificationTools = !localPreview && profile && !requiresProfilePhoto && (currentView === "rider" || currentView === "driver")
+    ? <NotificationSettings role={currentView} /> : null;
+  return (
+    <AppShell
+      currentView={currentView}
+      onChangeView={(view) => void changeView(view)}
+      onBackHome={() => {
+        if (!localPreview) void signOutCurrentUser().catch(() => undefined);
+        setMode("welcome");
+        setProfile(null);
+        setDriverRecord(null);
+        setDriverAccount(null);
+        setDriverOffers([]);
+        setOnline(false);
+        setBusinessAccount(null);
+        setHasBusinessAccount(false);
+        setAcceptedDriver(null);
+      }}
+      allowAdmin={profile?.role === "admin"}
+      theme={theme}
+      onToggleTheme={toggleTheme}
+      journey={journey}
+      accountName={profile?.full_name || undefined}
+      accountTools={profile?.avatar_url ? profilePhotoTools : null}
+      notificationTools={notificationTools}
+      onUseCurrentLocation={() => void requestRiderLocation({ startSearch: false })}
+      onSetPickupPin={() => setPickupPinRequest((current) => current + 1)}
+      onViewMap={() => document.getElementById("lr3-map-anchor")?.scrollIntoView({ behavior: "smooth", block: "start" })}
+    >
+      {appMessage && <div className="app-message-banner" role="status">{appMessage}</div>}
+      {requiresProfilePhoto && profilePhotoTools}
       {!localPreview && profile && !requiresProfilePhoto && activeCommunicationTrip && communicationCounterpart && (
         <TripCommunicationPanel
           tripId={activeCommunicationTrip.id}
@@ -1342,6 +1353,7 @@ export default function Home() {
       {!requiresProfilePhoto && currentView === "rider" && (
         <RiderHome
           rider={activeRider}
+          pickupPinRequest={pickupPinRequest}
           draft={draft}
           rideStatus={rideStatus}
           counterOfferJmd={counterOfferJmd}
