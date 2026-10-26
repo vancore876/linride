@@ -108,7 +108,7 @@ const moreServiceTypes = serviceTypes.slice(4);
 function SimpleSection({
   title,
   helper,
-  children,
+  children
 }: {
   title: string;
   helper: string;
@@ -262,13 +262,8 @@ export function RiderHome({
             fareJmd={draft.offeredFareJmd}
             onRefresh={refreshRoute}
           />
-          <div className="lr6-ride-selector">
-            <h3>Choose your ride</h3>
-            <p>Pick the service that suits your journey.</p>
-          </div>
-
-          <div className="linride-field">
-            <span className="linride-label">SELECT SERVICE</span>
+          <div className="linride-field lr8-service-choice">
+            <span className="linride-label">CHOOSE YOUR SERVICE</span>
             <div className="linride-pill-group">{mainServiceTypes.map(renderServiceButton)}</div>
             <details className="mt-3 rounded-2xl bg-smoke p-3">
               <summary className="cursor-pointer list-none text-sm font-black text-charcoal">More services</summary>
