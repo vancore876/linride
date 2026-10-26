@@ -134,7 +134,7 @@ export function AppShell({
             </div>
           </header>
           <div className="lr2-content">
-            {journey && <div className="lr2-journey"><JourneyProgress data={journey} /></div>}
+            {journey && currentView !== "rider" && <div className="lr2-journey"><JourneyProgress data={journey} /></div>}
             {children}
           </div>
         </section>
