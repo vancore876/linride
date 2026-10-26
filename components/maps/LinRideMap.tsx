@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, LocateFixed, Map as MapIcon, Radio } from "lucide-react";
+import { Box, LocateFixed, Map as MapIcon, Radio, Layers3, Compass, ShieldCheck } from "lucide-react";
 import maplibregl, {
   ExpressionSpecification,
   LngLatBounds,
@@ -15,6 +15,19 @@ import { LiveDriverLocation, Place } from "@/types/linride";
 const LINSTEAD_CENTER: [number, number] = [-77.031, 18.1366];
 const BUILDING_LAYER_ID = "linride-3d-buildings";
 const PICKUP_ACCURACY_SOURCE_ID = "linride-pickup-accuracy";
+const TELEPORT_DISTANCE_METERS = 2500;
+
+function distanceBetween(a: [number, number], b: [number, number]) {
+  const toRad = (n: number) => n * Math.PI / 180;
+  const dLat = toRad(b[1] - a[1]);
+  const dLon = toRad(b[0] - a[0]);
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(a[1])) * Math.cos(toRad(b[1])) * Math.sin(dLon / 2) ** 2;
+  return 6371000 * 2 * Math.asin(Math.min(1, Math.sqrt(h)));
+}
+
+function isJamaicaCoordinate(lat: number, lng: number) {
+  return lat >= 17.6 && lat <= 18.6 && lng >= -78.5 && lng <= -76.1;
+}
 
 function accuracyCircle(latitude: number, longitude: number, radiusMeters: number): GeoJSON.Polygon {
   const latitudeRadius = radiusMeters / 111320;
@@ -110,7 +123,14 @@ function animateMarker(
 ) {
   const start = marker.getLngLat();
   const startedAt = performance.now();
-  const duration = 1800;
+  const duration = 2200;
+  if (distanceBetween([start.lng, start.lat], target) > TELEPORT_DISTANCE_METERS) {
+    const existing = frames.get(driverId);
+    if (existing) cancelAnimationFrame(existing);
+    frames.delete(driverId);
+    marker.setLngLat(target);
+    return;
+  }
   const existingFrame = frames.get(driverId);
   if (existingFrame) cancelAnimationFrame(existingFrame);
 
@@ -156,6 +176,7 @@ export default function LinRideMap({
   const perspectiveRef = useRef<"3d" | "2d">("3d");
   const [ready, setReady] = useState(false);
   const [perspective, setPerspective] = useState<"3d" | "2d">("3d");
+  const [mapStyle, setMapStyle] = useState<"streets" | "night">("streets");
   const [followAssigned, setFollowAssigned] = useState(Boolean(assignedDriverId));
   const [mapError, setMapError] = useState<string | null>(null);
   const [mapAttempt, setMapAttempt] = useState(0);
@@ -201,7 +222,7 @@ export default function LinRideMap({
       try {
         activeMap = new maplibregl.Map({
           container,
-          style: getGeoapifyStyleUrl(),
+          style: getGeoapifyStyleUrl(mapStyle),
           center: LINSTEAD_CENTER,
           zoom: 13.4,
           pitch: is3D ? 48 : 0,
@@ -263,6 +284,7 @@ export default function LinRideMap({
         setReady(true);
       });
       activeMap.on("click", async (event) => {
+        if (!isJamaicaCoordinate(event.lngLat.lat, event.lngLat.lng)) return;
         const mode = selectionModeRef.current;
         if (!mode || !callbacksRef.current.onMapSelect) return;
         const place = await reverseGeocodeJamaica(event.lngLat.lat, event.lngLat.lng);
@@ -286,7 +308,7 @@ export default function LinRideMap({
       map?.remove();
       if (mapRef.current === map) mapRef.current = null;
     };
-  }, [apiKey, mapAttempt]);
+  }, [apiKey, mapAttempt, mapStyle]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -453,7 +475,7 @@ export default function LinRideMap({
       }
     });
 
-    drivers.forEach((driver) => {
+    drivers.filter((driver) => isJamaicaCoordinate(driver.latitude, driver.longitude) && (!driver.accuracy || driver.accuracy < 1500)).forEach((driver) => {
       const kind = driver.driverId === assignedDriverId ? "assigned" : "driver";
       let marker = driverMarkersRef.current.get(driver.driverId);
       if (!marker) {
@@ -527,6 +549,12 @@ export default function LinRideMap({
         </div>
       ) : (
         <>
+          <div className="lr2-map-tools">
+            <div className="lr2-map-style-switch" role="group" aria-label="Map style">
+              <button type="button" aria-pressed={mapStyle === "streets"} className={mapStyle === "streets" ? "active" : ""} onClick={() => setMapStyle("streets")}><Compass size={15} /> Streets</button>
+              <button type="button" aria-pressed={mapStyle === "night"} className={mapStyle === "night" ? "active" : ""} onClick={() => setMapStyle("night")}><Layers3 size={15} /> Night</button>
+            </div>
+          </div>
           <div className="linride-map-view-switch" role="group" aria-label="Map view">
             <button type="button" className={perspective === "3d" ? "active" : ""} onClick={() => setPerspective("3d")} aria-pressed={perspective === "3d"}>
               <Box size={15} /> 3D
@@ -537,6 +565,7 @@ export default function LinRideMap({
           </div>
           <div className="linride-map-live-hud">
             <span className="linride-map-live-count"><Radio size={14} /> {drivers.length} live {drivers.length === 1 ? "driver" : "drivers"}</span>
+            <span className="lr2-map-data"><ShieldCheck size={13} /> GPS locations, not simulated</span>
             {distanceKm != null && durationMinutes != null && (
               <span>{distanceKm.toFixed(1)} km <b>{durationMinutes} min</b></span>
             )}
