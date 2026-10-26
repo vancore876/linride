@@ -17,3 +17,51 @@
 @keyframes auth2-loading{to{transform:translateX(150%)}}.auth2-page button:focus-visible,.auth2-splash button:focus-visible{outline:3px solid #40bd60;outline-offset:3px}
 @media(max-width:940px){.auth2-page{grid-template-columns:1fr}.auth2-story{display:none}.auth2-panel{min-height:100dvh;padding:23px}.auth2-panel-top{align-items:center;justify-content:space-between}.auth2-mobile-brand{display:block}.auth2-card{margin:40px auto}.auth2-panel-footer{margin-top:auto}}
 @media(max-width:540px){.auth2-role-grid{gap:5px}.auth2-role-option{padding:13px 2px}.auth2-two-inputs{grid-template-columns:1fr}.auth2-card h2{font-size:30px}.auth2-panel{padding:16px}.auth2-splash-sun{width:75px;height:75px;right:4%}}@media(prefers-reduced-motion:reduce){.auth2-splash-track>span{animation:none}}
+
+/* V4 — Animated Jamaican country-road experience. */
+.auth4-country-scene{position:relative;overflow:hidden;isolation:isolate}
+.auth4-scene-svg{display:block;width:100%;height:100%}
+.auth4-cloud-one{animation:auth4-cloud 22s linear infinite alternate}
+.auth4-cloud-two{animation:auth4-cloud 31s linear infinite alternate-reverse}
+.auth4-sun{animation:auth4-sunrise 4s ease-in-out infinite alternate}
+.auth4-palm{transform-box:fill-box;transform-origin:bottom center;animation:auth4-sway 5.5s ease-in-out infinite alternate}
+.auth4-palm-right{animation-delay:-2.5s}
+.auth4-road-dashes{animation:auth4-highway 1.35s linear infinite}
+.auth4-vehicle{animation:auth4-drive 6s ease-in-out infinite alternate}
+.auth4-wheel{transform-box:fill-box;transform-origin:center;animation:auth4-roll .7s linear infinite}
+@keyframes auth4-cloud{to{translate:40px 0}}
+@keyframes auth4-sunrise{to{opacity:.65;scale:1.012}}
+@keyframes auth4-sway{to{rotate:2deg}}
+@keyframes auth4-highway{to{stroke-dashoffset:-129}}
+@keyframes auth4-drive{0%{transform:translate(200px,313px) scale(.6)}45%{transform:translate(490px,300px) scale(.64)}100%{transform:translate(760px,290px) scale(.68)}}
+@keyframes auth4-roll{to{rotate:360deg}}
+.auth4-splash{position:fixed;inset:0;z-index:1000;min-height:100dvh;overflow:hidden;display:flex;flex-direction:column;align-items:center;background:linear-gradient(180deg,#f5f2df 0%,#e4ecd8 52%,#c6ddbf 100%);color:#143d2b}
+.auth4-splash-top{position:relative;z-index:2;width:min(1300px,100%);padding:clamp(23px,4vw,46px);display:flex;align-items:center;justify-content:space-between;gap:20px}
+.auth4-splash-brand{display:flex;align-items:center;gap:9px;font-size:clamp(27px,3vw,36px);font-weight:900;letter-spacing:-.07em}.auth4-splash-brand strong span{color:#219447}.auth4-splash-pin{width:43px;height:43px;border-radius:14px;background:#246b45;color:white;display:grid;place-items:center}
+.auth4-splash-location,.auth4-splash-eyebrow,.auth4-splash-bottom-label{letter-spacing:.17em;font-size:10px;font-weight:900;color:#4c765a}
+.auth4-splash-message{position:relative;z-index:2;text-align:center;margin:clamp(14px,5vh,65px) 20px 0}
+.auth4-splash-message h1{font-size:clamp(43px,6vw,77px);line-height:1.04;letter-spacing:-.065em;font-weight:900;margin:17px 0 13px}
+.auth4-splash-message>p{font-size:clamp(13px,1.4vw,17px);color:#4d6855}
+.auth4-splash-status{display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:29px;color:#4b6f52;font-size:12px;font-weight:750}
+.auth4-loading-track{height:3px;width:205px;border-radius:5px;background:#28633b2b;overflow:hidden}.auth4-loading-track span{display:block;width:42%;height:100%;background:#248d49;border-radius:4px;animation:auth4-progress 1.5s ease-in-out infinite alternate}
+@keyframes auth4-progress{to{transform:translateX(138%)}}
+.auth4-splash-skip{margin-top:18px;display:inline-flex;gap:8px;align-items:center;background:#1c7942;color:#fff;padding:11px 17px;border-radius:12px;font-size:12px;font-weight:900}
+.auth4-splash-landscape{position:absolute;inset:auto 0 0;height:min(50vh,510px)}
+.auth4-splash-bottom-label{position:absolute;bottom:14px;z-index:3;color:#e5e9d5;background:#153e36c7;border-radius:30px;padding:8px 13px}
+.auth4-story{background:#153a29}
+.auth4-story .auth2-story-main{max-width:640px}
+.auth4-story .auth2-story-main h1{font-size:clamp(36px,4vw,58px)}
+.auth4-login-scene{height:clamp(230px,31vh,350px);position:relative;margin-top:25px;border:1px solid #ffffff2c;border-radius:20px;overflow:hidden;box-shadow:0 22px 40px #081d174d}
+.auth4-login-scene .auth4-country-scene{width:100%;height:100%}
+.auth4-login-scene .auth4-scene-svg{width:100%;height:100%}
+.auth4-login-scene-caption{position:absolute;bottom:13px;left:15px;display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:10px;background:#133e32e8;font-size:10px;letter-spacing:.1em;font-weight:900;color:#f1f5db}
+.auth4-login-scene-caption span{width:7px;height:7px;background:#a4e27c;border-radius:50%}
+.auth4-panel{background:#f6f8f1}
+.auth4-card{max-width:475px}
+.auth4-card h2{letter-spacing:-.047em}
+.auth4-auth-tabs{border-radius:13px}
+.auth4-panel .auth2-primary-action{background:#257e43}
+@media(max-height:700px){.auth4-splash-landscape{height:43vh}.auth4-splash-message{margin-top:0}.auth4-splash-message h1{font-size:clamp(31px,5vw,58px)}}
+@media(max-width:940px){.auth4-splash-landscape{height:44vh}.auth4-splash-message{margin-top:3vh}.auth4-splash-message h1{font-size:clamp(36px,8vw,62px)}}
+@media(max-width:580px){.auth4-splash-location{display:none}.auth4-splash-top{padding:23px}.auth4-splash-landscape{height:39vh}.auth4-splash-message{margin-top:4vh}.auth4-splash-message h1{font-size:clamp(35px,10vw,48px)}.auth4-splash-status{margin-top:18px}}
+@media(prefers-reduced-motion:reduce){.auth4-country-scene *,.auth4-loading-track span{animation:none!important}.auth4-vehicle{transform:translate(470px,303px) scale(.64)}}
