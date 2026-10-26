@@ -234,7 +234,7 @@ export function RiderHome({
             onDestinationMove={(destination) => updateTripPlace("destination", destination)}
           />
         </div>
-        <div className="lr8-places-heading"><strong>Where to?</strong><span>Choose your pickup and destination</span></div>
+        <div className="lr8-places-heading"><strong>Where to?</strong><span>Tap the map to preview any spot · GPS follow stays on</span></div>
         <div className="map-search-grid lr2-search-grid">
           <LocationSearch label="Pickup" value={draft.pickup} onChange={(pickup) => updateTripPlace("pickup", pickup)} />
           <LocationSearch label="Destination" value={draft.destination} onChange={(destination) => updateTripPlace("destination", destination)} />
