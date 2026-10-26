@@ -528,30 +528,21 @@ export async function signInWithGoogle(params: {
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!supabaseUrl || !supabaseKey) throw new Error("Google sign-in is not configured yet.");
 
-  try {
-    const response = await fetch(`${supabaseUrl}/auth/v1/settings`, { headers: { apikey: supabaseKey } });
-    if (response.ok) {
-      const settings = await response.json() as { external?: { google?: boolean } };
-      if (settings.external?.google !== true) {
-        throw new Error("Google sign-in still needs to be enabled in the Lin Ride authentication settings.");
-      }
-    }
-  } catch (error) {
-    if (error instanceof Error && error.message.includes("still needs to be enabled")) throw error;
-    throw new Error("Could not connect to Google sign-in. Check your internet and try again.");
-  }
-
+  // Let Supabase own the OAuth handshake. Browser-side requests to /auth/v1/settings
+  // can be blocked by network/CORS and should never prevent the redirect itself.
   window.localStorage.setItem(OAUTH_PROFILE_STORAGE_KEY, JSON.stringify({
     role: params.role,
     fullName: params.fullName?.trim() || "",
     phone: params.phone?.trim() || ""
   }));
 
-  const { error } = await client.auth.signInWithOAuth({
-    provider: "google",
-    options: { redirectTo: `${window.location.origin}/` }
-  });
-  if (error) {
+  try {
+    const { error } = await client.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${window.location.origin}/` }
+    });
+    if (error) throw error;
+  } catch (error) {
     window.localStorage.removeItem(OAUTH_PROFILE_STORAGE_KEY);
     throw new Error(friendlyAuthMessage(error, "Could not start Google sign-in."));
   }
