@@ -1,4 +1,7 @@
-import { ArrowUpRight, BriefcaseBusiness, CarFront, House, LogOut, Moon, ShieldCheck, Sun, Video, Waves, MapPinned } from "lucide-react";
+"use client";
+
+import { useEffect, useState } from "react";
+import { ArrowUpRight, BriefcaseBusiness, CarFront, House, LogOut, Moon, ShieldCheck, Sun, Video, Waves, MapPinned, Menu, X, ChevronRight } from "lucide-react";
 import { JourneyProgress, JourneyProgressData } from "@/components/JourneyProgress";
 import { LINRIDE_TIKTOK } from "@/lib/social";
 
@@ -34,18 +37,23 @@ export function AppShell({
   currentView, children, onChangeView, onBackHome,
   allowAdmin = false, theme, onToggleTheme, journey
 }: AppShellProps) {
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  useEffect(() => { setDrawerOpen(false); }, [currentView]);
+  useEffect(() => { if (!drawerOpen) return; const handleKey = (event: KeyboardEvent) => { if (event.key === "Escape") setDrawerOpen(false); }; document.addEventListener("keydown", handleKey); return () => document.removeEventListener("keydown", handleKey); }, [drawerOpen]);
   const current = pageTitle[currentView];
   const visible = sections.filter((section) => section.view !== "admin" || allowAdmin);
   const ThemeIcon = theme === "dark" ? Sun : Moon;
 
   return (
     <main data-theme={theme} className="linride-app-bg lr2-app min-h-screen text-charcoal">
+      {drawerOpen && <button type="button" className="lr3-drawer-backdrop" aria-label="Close navigation" onClick={() => setDrawerOpen(false)} />}
       <div className="lr2-frame">
-        <aside className="lr2-sidebar" aria-label="Main navigation">
+        <aside className={`lr2-sidebar ${drawerOpen ? "lr3-drawer-open" : ""}`} aria-label="Main navigation">
           <div className="lr2-brand">
             <span className="lr2-brand-mark"><Waves size={26} strokeWidth={2.6} /></span>
             <div><strong>lin<span>ride.</span></strong><small>Move your way.</small></div>
           </div>
+          <button type="button" className="lr3-drawer-close" aria-label="Close menu" onClick={() => setDrawerOpen(false)}><X size={22}/></button>
           <span className="lr2-sidebar-caption">YOUR SPACE</span>
           <nav className="lr2-role-nav" aria-label="Choose a LinRide section">
             {visible.map((section) => {
@@ -82,12 +90,14 @@ export function AppShell({
 
         <section className="lr2-workspace">
           <header className="lr2-header">
+            <button type="button" className="lr3-menu-toggle" aria-label="Open navigation menu" aria-expanded={drawerOpen} onClick={() => setDrawerOpen(true)}><Menu size={22}/></button>
             <div className="lr2-header-title">
               <span className="lr2-kicker">{current.kicker}</span>
               <h1>{current.title}</h1>
               <p>{current.description}</p>
             </div>
             <div className="lr2-header-actions">
+              <button type="button" className="lr3-menu-shortcut" onClick={() => setDrawerOpen(true)}>Menu <ChevronRight size={16}/></button>
               <span className="lr2-jamaica-chip"><span className="lr2-pulse-dot" /> Made for Jamaica</span>
               <button type="button" onClick={onToggleTheme} className="lr2-icon-action" aria-label={theme === "dark" ? "Use light theme" : "Use dark theme"}><ThemeIcon size={19} /></button>
               <button type="button" onClick={onBackHome} className="lr2-icon-action lr2-desktop-signout" aria-label="Sign out"><LogOut size={19} /></button>
