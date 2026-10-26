@@ -1051,8 +1051,9 @@ export default function Home() {
       }
       if (options.startSearch) setRideStatus("reviewing");
     } catch (error) {
-      setLocationPermission("denied");
       const code = geolocationErrorCode(error);
+      // Timeout or weak signal does not mean permission was denied.
+      setLocationPermission(code === 1 ? "denied" : "unknown");
       setLocationNotice(
         code === 1
           ? "Location permission is off. Allow location for this LinRide website in your browser settings and enable Precise Location on your phone, then retry."
