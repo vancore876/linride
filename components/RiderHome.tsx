@@ -279,14 +279,14 @@ export function RiderHome({
           <h2 className="lr6-booking-title">Trip details &amp; ride options</h2>
           <p className="linride-card-desc mt-2">Review your route, choose a ride, and send your fare offer.</p>
           <RouteSummaryCard
-          pickup={draft.pickup}
-          destination={draft.destination}
-          route={route}
-          loading={routeLoading}
-          error={routeError}
-          fareJmd={draft.offeredFareJmd}
-          onRefresh={refreshRoute}
-        />
+            pickup={draft.pickup}
+            destination={draft.destination}
+            route={route}
+            loading={routeLoading}
+            error={routeError}
+            fareJmd={draft.offeredFareJmd}
+            onRefresh={refreshRoute}
+          />
           <div className="lr6-ride-selector">
             <h3>Choose your ride</h3>
             <p>Pick the service that suits your journey.</p>
@@ -354,17 +354,17 @@ export function RiderHome({
 
           <div className="lr6-booking-actions">
             <button
-          type="button"
-          className={`map-confirm-button ${pinsConfirmed ? "confirmed" : ""}`}
-          disabled={!route || routeLoading}
-          onClick={() => { setPinsConfirmed(true); onConfirmPickup?.(); }}
-        >
-          {pinsConfirmed ? "Pickup and destination confirmed" : "Confirm pickup and destination"}
-        </button>
-                    <button type="button" onClick={onFindDriver} disabled={!route || !pinsConfirmed} className="linride-submit">
-            Find my driver
-          </button>
-          {!pinsConfirmed && <p className="mt-2 text-center text-xs font-bold text-charcoal/50">Confirm your pickup and destination to request a driver.</p>}
+              type="button"
+              className={`map-confirm-button ${pinsConfirmed ? "confirmed" : ""}`}
+              disabled={!route || routeLoading}
+              onClick={() => { setPinsConfirmed(true); onConfirmPickup?.(); }}
+            >
+              {pinsConfirmed ? "Pickup and destination confirmed" : "Confirm pickup and destination"}
+            </button>
+            <button type="button" onClick={onFindDriver} disabled={!route || !pinsConfirmed} className="linride-submit">
+              Find my driver
+            </button>
+            {!pinsConfirmed && <p className="lr6-booking-hint">Confirm your pickup and destination to request a driver.</p>}
           </div>
         </div>
 
