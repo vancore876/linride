@@ -1466,12 +1466,11 @@ export default function Home() {
       )}
       {!requiresProfilePhoto && currentView === "rider" && (
         <RiderHome
-          rider={activeRider}
+          hasActiveRideRequest={Boolean(activeRideRequestId)}
           pickupPinRequest={pickupPinRequest}
           draft={draft}
           rideStatus={rideStatus}
           counterOfferJmd={counterOfferJmd}
-          locationNotice={locationNotice}
           locationPermission={locationPermission}
           liveGpsLocation={liveGpsLocation}
           gpsTrackingEnabled={gpsTrackingEnabled}
