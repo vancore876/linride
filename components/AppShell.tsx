@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowUpRight, BriefcaseBusiness, CarFront, House, LogOut, Moon, ShieldCheck, Sun, Video, Waves, MapPinned, Menu, X, ChevronRight } from "lucide-react";
+import { ArrowUpRight, BriefcaseBusiness, CarFront, House, LogOut, Moon, ShieldCheck, Sun, Video, Waves, MapPinned, Menu, X, ChevronRight, UserRound, Bell, LocateFixed, MapPin, Navigation } from "lucide-react";
 import { JourneyProgress, JourneyProgressData } from "@/components/JourneyProgress";
 import { LINRIDE_TIKTOK } from "@/lib/social";
 
@@ -17,6 +17,12 @@ type AppShellProps = {
   theme: ThemeMode;
   onToggleTheme: () => void;
   journey?: JourneyProgressData;
+  accountName?: string;
+  accountTools?: React.ReactNode;
+  notificationTools?: React.ReactNode;
+  onUseCurrentLocation?: () => void;
+  onSetPickupPin?: () => void;
+  onViewMap?: () => void;
 };
 
 const sections = [
@@ -35,7 +41,8 @@ const pageTitle: Record<AppView, { title: string; kicker: string; description: s
 
 export function AppShell({
   currentView, children, onChangeView, onBackHome,
-  allowAdmin = false, theme, onToggleTheme, journey
+  allowAdmin = false, theme, onToggleTheme, journey,
+  accountName, accountTools, notificationTools, onUseCurrentLocation, onSetPickupPin, onViewMap
 }: AppShellProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   useEffect(() => { setDrawerOpen(false); }, [currentView]);
@@ -74,6 +81,20 @@ export function AppShell({
               );
             })}
           </nav>
+          <div className="lr4-sidebar-extras">
+            <span className="lr2-sidebar-caption">YOUR ACCOUNT</span>
+            {accountName && <div className="lr4-account-summary"><span className="lr4-account-avatar"><UserRound size={20} /></span><div><strong>{accountName}</strong><small>Your LinRide profile</small></div></div>}
+            {accountTools && <details className="lr4-sidebar-details"><summary><UserRound size={18} /> Profile picture <ChevronRight size={17} /></summary><div className="lr4-sidebar-tools">{accountTools}</div></details>}
+            {notificationTools && <details className="lr4-sidebar-details"><summary><Bell size={18} /> Phone alerts <ChevronRight size={17} /></summary><div className="lr4-sidebar-tools">{notificationTools}</div></details>}
+            {currentView === "rider" && (onUseCurrentLocation || onSetPickupPin || onViewMap) && (
+              <div className="lr4-sidebar-map-actions">
+                <span className="lr2-sidebar-caption">QUICK ROUTE ACTIONS</span>
+                {onUseCurrentLocation && <button type="button" onClick={() => { setDrawerOpen(false); onUseCurrentLocation(); }}><LocateFixed size={18} /> Update GPS</button>}
+                {onSetPickupPin && <button type="button" onClick={() => { setDrawerOpen(false); onSetPickupPin(); }}><MapPin size={18} /> Set pickup pin</button>}
+                {onViewMap && <button type="button" onClick={() => { setDrawerOpen(false); onViewMap(); }}><Navigation size={18} /> View trip map</button>}
+              </div>
+            )}
+          </div>
           <div className="lr2-sidebar-bottom">
             <div className="lr2-sidebar-story">
               <MapPinned size={21} />
