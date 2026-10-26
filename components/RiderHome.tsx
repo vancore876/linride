@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import { BriefcaseBusiness, Car, GraduationCap, Package, Route, Search, ShoppingBag, Truck, Zap, LocateFixed, MapPin, Navigation, Crosshair, Info } from "lucide-react";
+import { BriefcaseBusiness, Car, GraduationCap, Package, Route, Search, ShoppingBag, Truck, Zap, Crosshair, Info } from "lucide-react";
 import { BankWithdrawalCard, WithdrawalFormValues } from "@/components/BankWithdrawalCard";
 import { BoostTagSelector } from "@/components/BoostTagSelector";
 import { CountryServiceDetailsCard } from "@/components/CountryServiceDetailsCard";
@@ -56,6 +56,7 @@ const LinRideMap = dynamic(() => import("@/components/maps/LinRideMap"), {
 
 type RiderHomeProps = {
   rider: Profile;
+  pickupPinRequest?: number;
   draft: RideRequestDraft;
   rideStatus: RideStatus;
   counterOfferJmd?: number | null;
@@ -140,6 +141,7 @@ function SimpleSection({
 
 export function RiderHome({
   rider,
+  pickupPinRequest = 0,
   draft,
   rideStatus,
   counterOfferJmd,
@@ -187,6 +189,11 @@ export function RiderHome({
 
   useEffect(() => onRouteDetailsChange?.(route), [onRouteDetailsChange, route]);
   useEffect(() => setPinsConfirmed(false), [draft.destination.lat, draft.destination.lng, draft.pickup.lat, draft.pickup.lng]);
+  useEffect(() => {
+    if (pickupPinRequest <= 0) return;
+    setSelectionMode("pickup");
+    document.getElementById("lr3-map-anchor")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [pickupPinRequest]);
 
   function updateTripPlace(kind: "pickup" | "destination", place: typeof draft.pickup) {
     onDraftChange({ ...draft, [kind]: place, routeDetails: undefined });
@@ -229,9 +236,25 @@ export function RiderHome({
         </div>
       </section>
 
-      <div className="lr3-mobile-shortcuts" aria-label="Quick trip actions"><button type="button" onClick={onUseCurrentLocation}><LocateFixed size={17}/> Update GPS</button><button type="button" onClick={() => { setSelectionMode("pickup"); document.getElementById("lr3-map-anchor")?.scrollIntoView({ behavior: "smooth", block: "center" }); }}><MapPin size={17}/> Set pickup pin</button><button type="button" onClick={() => document.getElementById("lr3-map-anchor")?.scrollIntoView({ behavior: "smooth", block: "center" })}><Navigation size={17}/> View map</button></div>
       <section className="trip-map-workspace lr2-map-workspace">
         <div className="lr2-map-heading"><div><span className="lr2-kicker">PLAN YOUR ROUTE</span><h2>Your journey starts here</h2></div><span className="lr2-live-map-badge"><span /> Live map</span></div>
+        <div id="lr3-map-anchor" className="linride-map-shell lr2-rider-map-shell">
+          <LinRideMap
+            pickup={draft.pickup}
+            destination={draft.destination}
+            route={route}
+            drivers={liveDriverLocations}
+            assignedDriverId={acceptedDriver?.id}
+            selectionMode={selectionMode}
+            onMapSelect={(mode, place) => {
+              updateTripPlace(mode, place);
+              setSelectionMode(null);
+            }}
+            onPickupMove={(pickup) => updateTripPlace("pickup", pickup)}
+            onDestinationMove={(destination) => updateTripPlace("destination", destination)}
+          />
+        </div>
+        <p className="lr4-map-hint">Tap Set pickup or Set destination below to choose a position on the map.</p>
         <div className="map-search-grid lr2-search-grid">
           <LocationSearch label="Pickup" value={draft.pickup} onChange={(pickup) => updateTripPlace("pickup", pickup)} />
           <LocationSearch label="Destination" value={draft.destination} onChange={(destination) => updateTripPlace("destination", destination)} />
@@ -259,22 +282,6 @@ export function RiderHome({
           </div>
         )}
         {selectionMode && <p className="map-workspace-notice">Tap the map to set your {selectionMode}, then drag the pin for the exact spot.</p>}
-        <div id="lr3-map-anchor" className="linride-map-shell lr2-rider-map-shell">
-          <LinRideMap
-            pickup={draft.pickup}
-            destination={draft.destination}
-            route={route}
-            drivers={liveDriverLocations}
-            assignedDriverId={acceptedDriver?.id}
-            selectionMode={selectionMode}
-            onMapSelect={(mode, place) => {
-              updateTripPlace(mode, place);
-              setSelectionMode(null);
-            }}
-            onPickupMove={(pickup) => updateTripPlace("pickup", pickup)}
-            onDestinationMove={(destination) => updateTripPlace("destination", destination)}
-          />
-        </div>
         <RouteSummaryCard
           pickup={draft.pickup}
           destination={draft.destination}
