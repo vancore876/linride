@@ -1021,6 +1021,12 @@ export default function Home() {
         accuracyMeters: accuracy,
         hint: `GPS accuracy: about ${accuracyLabel}`
       };
+      if (activeTrip || activeRideRequestId) {
+        setAutoFollowGpsPickup(false);
+        setLocationPermission("granted");
+        setLocationNotice("Your live position is updating. Your booked pickup remains fixed.");
+        return;
+      }
       const currentPickup = draft.pickup;
       const hasCurrentPickup = Number.isFinite(currentPickup.lat) && Number.isFinite(currentPickup.lng) && currentPickup.lat !== 0 && currentPickup.lng !== 0;
       const mismatchMeters = hasCurrentPickup
