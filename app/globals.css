@@ -3131,3 +3131,40 @@ h4,
  .lr2-driver-summary {grid-template-columns:1fr}
  .lr2-driver-summary>div {padding:13px 16px}
 }
+
+/* LinRide mobile navigation and clearer trip planning */
+.lr3-menu-toggle,.lr3-menu-shortcut,.lr3-drawer-close,.lr3-drawer-backdrop{display:none}
+.lr3-location-panel{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;margin:12px 0;background:rgb(var(--color-page));border:1px solid var(--lr2-border);border-radius:15px}
+.lr3-location-panel strong{font-size:13px;display:flex;align-items:center;gap:7px}
+.lr3-location-panel p{font-size:11px;opacity:.77;line-height:1.5;margin:3px 0 0}
+.lr3-accuracy{display:inline-flex;align-items:center;gap:5px;padding:6px 9px;border-radius:10px;font-size:11px;font-weight:800;white-space:nowrap;background:#e0f7e7;color:#145a32}
+.lr3-accuracy.low{background:#fff2dc;color:#83551b}
+.lr3-location-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
+.lr3-location-actions button{padding:9px 12px;border-radius:11px;border:1px solid var(--lr2-border);font-size:12px;font-weight:800}
+.lr3-location-actions button:hover{background:var(--lr2-mint)}
+.lr3-mobile-shortcuts{display:flex;gap:9px;flex-wrap:wrap;margin:12px 0}
+.lr3-mobile-shortcuts button{display:flex;align-items:center;gap:6px;background:rgb(var(--color-surface));border:1px solid var(--lr2-border);border-radius:13px;padding:12px 14px;font-size:12px;font-weight:800}
+.lr3-mobile-shortcuts button:active{transform:scale(.97)}
+@media(max-width:960px){
+.lr3-menu-toggle{display:grid;place-items:center;flex-shrink:0;width:44px;height:44px;border-radius:13px;background:var(--lr2-mint);color:var(--lr2-brand)}
+.lr3-menu-shortcut{display:flex;align-items:center;gap:3px;font-size:12px;font-weight:850;color:var(--lr2-brand)}
+.lr3-drawer-backdrop{display:block;position:fixed;inset:0;background:rgba(4,22,19,.62);backdrop-filter:blur(3px);z-index:299;border:0}
+.lr2-app .lr2-sidebar{display:flex;position:fixed;inset:0 auto 0 0;width:min(86vw,330px);height:100dvh;z-index:300;overflow:auto;transform:translateX(-105%);transition:transform .27s cubic-bezier(.22,.83,.34,1);box-shadow:0 0 35px rgba(0,0,0,.25)}
+.lr2-app .lr2-sidebar.lr3-drawer-open{transform:translateX(0)}
+.lr3-drawer-close{display:grid;position:absolute;right:14px;top:18px;place-items:center;color:white;width:41px;height:41px;border:1px solid #ffffff39;border-radius:12px}
+.lr2-sidebar .lr2-brand{padding-right:46px}
+.lr2-header{gap:11px}.lr2-header-title{min-width:0;flex:1}
+.lr2-header-title h1{font-size:clamp(19px,4vw,26px)}
+.lr2-header-actions .lr2-icon-action{display:none}
+}
+@media(max-width:620px){
+.lr2-header{padding:13px 15px}
+.lr2-content{padding:0 12px 115px}
+.lr2-mobile-dock{padding-left:6px;padding-right:6px}
+.lr3-location-panel{align-items:flex-start;flex-direction:column}
+.lr3-mobile-shortcuts button{flex:1;justify-content:center}
+.lr2-rider-map-shell .linride-map-stage,.lr2-rider-map-shell .linride-map-canvas{min-height:430px}
+.lr2-map-workspace .map-marker-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+.lr2-map-workspace .map-marker-controls button{min-width:0;justify-content:center}
+}
+@media(prefers-reduced-motion:reduce){.lr2-app .lr2-sidebar{transition:none}}
