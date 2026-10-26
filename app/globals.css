@@ -3281,3 +3281,5 @@ h4,
 @media(max-width:960px){.lr6-booking-flow{margin:12px 0 0}.lr6-booking-actions{grid-template-columns:1fr}.lr6-combined-trip-card .map-route-summary{margin:13px 0 0}.lr6-combined-trip-card .map-route-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.lr6-combined-trip-card .map-route-metrics>span:last-child{grid-column:1/-1}}
 @media(max-width:620px){.lr6-combined-trip-card{padding:16px 12px;border-radius:17px}.lr6-booking-title{font-size:24px}.lr6-ride-selector{padding-top:15px;margin-top:15px}.lr6-booking-actions .map-confirm-button,.lr6-booking-actions .linride-submit{min-height:51px;font-size:13px}.lr6-combined-trip-card .map-route-summary{padding:12px}.lr6-combined-trip-card .map-route-metrics b{font-size:15px}}
 @media(prefers-reduced-motion:reduce){.lr6-gps-actions button,.lr6-gps-candidate button{transition:none!important;transform:none!important}}
+
+.lr6-booking-hint{grid-column:1/-1;margin:0;color:rgb(var(--color-text)/.62);font-size:11px;font-weight:750;text-align:center}
