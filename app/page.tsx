@@ -1283,9 +1283,8 @@ export default function Home() {
     );
   }
 
-  const profilePhotoTools = !localPreview && profile && (currentView === "rider" || currentView === "driver")
-    ? (
-      <ProfilePhotoSetup
+  const profilePhotoTools = !localPreview && profile && (currentView === "rider" || currentView === "driver") ? (
+    <ProfilePhotoSetup
           fullName={profile.full_name || (profile.role === "driver" ? "Driver" : "Passenger")}
           role={currentView === "driver" ? "driver" : profile.role}
           currentPhotoUrl={profile.avatar_url}
@@ -1306,10 +1305,7 @@ export default function Home() {
             setAppMessage("Profile picture removed. Add a new one to continue.");
           }}
         />
-      )}
-      {!localPreview && profile && !requiresProfilePhoto && (currentView === "rider" || currentView === "driver") && (
-        <NotificationSettings role={currentView} />
-    ) : null;
+  ) : null;
   const notificationTools = !localPreview && profile && !requiresProfilePhoto && (currentView === "rider" || currentView === "driver")
     ? <NotificationSettings role={currentView} /> : null;
   return (
