@@ -275,7 +275,7 @@ export function RiderHome({
         </div>
         <MapMarkerControls
           selectionMode={selectionMode}
-          onSelectionMode={setSelectionMode}
+          onSelectionMode={(mode) => { if (mode === "pickup") onConfirmPickup?.(); setSelectionMode(mode); }}
           onUseLocation={onUseCurrentLocation}
           onRefreshRoute={refreshRoute}
           locating={locationPermission === "requesting"}
@@ -292,7 +292,7 @@ export function RiderHome({
               <button type="button" onClick={onUseCurrentLocation} disabled={locationPermission === "requesting"}>
                 {locationPermission === "requesting" ? "Finding you…" : gpsTrackingEnabled ? "Reset pickup to GPS" : "Start live GPS"}
               </button>
-              <button type="button" onClick={() => setSelectionMode("pickup")}>Set pickup manually</button>
+              <button type="button" onClick={() => { onConfirmPickup?.(); setSelectionMode("pickup"); }}>Set pickup manually</button>
               {gpsTrackingEnabled && onStopLiveGps && <button type="button" onClick={onStopLiveGps}>Stop tracking</button>}
             </div>
           </div>
