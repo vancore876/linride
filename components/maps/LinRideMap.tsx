@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, LocateFixed, Map as MapIcon, Radio, Layers3, Compass, ShieldCheck, Route as RouteIcon } from "lucide-react";
+import { Box, LocateFixed, Map as MapIcon, Radio, Layers3, Compass, ShieldCheck, Route as RouteIcon, Sparkles } from "lucide-react";
 import maplibregl, {
   ExpressionSpecification,
   LngLatBounds,
@@ -724,6 +724,7 @@ export default function LinRideMap({
             {distanceKm != null && durationMinutes != null && (
               <span>{distanceKm.toFixed(1)} km <b>{durationMinutes} min</b></span>
             )}
+            {route && <span className="lr8-route-legend"><Sparkles size={13} /> Route preview</span>}
           </div>
           {gpsTrackingEnabled && liveGpsLocation && (
             <button type="button" className={`linride-map-follow ${followDevice ? "active" : ""}`} style={{ bottom: assignedDriverId ? 92 : 54 }}
