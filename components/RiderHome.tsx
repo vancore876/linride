@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import { BriefcaseBusiness, Car, GraduationCap, Package, Route, Search, ShoppingBag, Truck, Zap, Crosshair, Info } from "lucide-react";
+import { BriefcaseBusiness, Car, GraduationCap, Package, Route, Search, ShoppingBag, Truck, Zap } from "lucide-react";
 import { BankWithdrawalCard, WithdrawalFormValues } from "@/components/BankWithdrawalCard";
 import { BoostTagSelector } from "@/components/BoostTagSelector";
 import { CountryServiceDetailsCard } from "@/components/CountryServiceDetailsCard";
@@ -62,20 +62,14 @@ type RiderHomeProps = {
   counterOfferJmd?: number | null;
   locationNotice?: string | null;
   locationPermission: "unknown" | "requesting" | "granted" | "denied";
-  locationCandidate?: Place | null;
   liveGpsLocation?: Place | null;
   gpsTrackingEnabled?: boolean;
-  autoFollowGpsPickup?: boolean;
-  gpsUpdatedAt?: number | null;
-  onStopLiveGps?: () => void;
   onConfirmPickup?: () => void;
   drivers: Driver[];
   acceptedDriver?: Driver | null;
   driverOffers?: DriverOffer[];
   onDraftChange: (draft: RideRequestDraft) => void;
   onUseCurrentLocation: () => void;
-  onAcceptLocationCandidate?: () => void;
-  onRejectLocationCandidate?: () => void;
   onFindDriver: () => void;
   onRouteDetailsChange?: (route: RouteDetails | null) => void;
   onAcceptCounter: () => void;
@@ -153,20 +147,14 @@ export function RiderHome({
   counterOfferJmd,
   locationNotice,
   locationPermission,
-  locationCandidate,
   liveGpsLocation,
   gpsTrackingEnabled = false,
-  autoFollowGpsPickup = false,
-  gpsUpdatedAt,
-  onStopLiveGps,
   onConfirmPickup,
   drivers,
   acceptedDriver,
   driverOffers = [],
   onDraftChange,
   onUseCurrentLocation,
-  onAcceptLocationCandidate,
-  onRejectLocationCandidate,
   onFindDriver,
   onRouteDetailsChange,
   onAcceptCounter,
@@ -281,44 +269,16 @@ export function RiderHome({
           locating={locationPermission === "requesting"}
           tracking={gpsTrackingEnabled}
         />
-        <div className="lr3-location-panel">
-          <div>
-            <strong><Crosshair size={17}/> Your live location
-              <span className={`lr5-gps-badge ${gpsTrackingEnabled ? "on" : ""}`}>{gpsTrackingEnabled ? "LIVE" : "OFF"}</span>
-            </strong>
-            <p>{locationPermission === "requesting" ? "Finding a precise GPS signal…" : locationNotice || (gpsTrackingEnabled ? "Blue dot updates as your phone moves." : "Tap Use my location to begin continuous tracking.")}</p>
-            {gpsTrackingEnabled && <p className="lr5-gps-help">{autoFollowGpsPickup ? "Pickup follows GPS until you set a pin or confirm your trip." : "Your position follows you; the pickup pin stays fixed."} Location updates require the app to remain open.</p>}
-            <div className="lr3-location-actions">
-              <button type="button" onClick={onUseCurrentLocation} disabled={locationPermission === "requesting"}>
-                {locationPermission === "requesting" ? "Finding you…" : gpsTrackingEnabled ? "Reset pickup to GPS" : "Start live GPS"}
-              </button>
-              <button type="button" onClick={() => { onConfirmPickup?.(); setSelectionMode("pickup"); }}>Set pickup manually</button>
-              {gpsTrackingEnabled && onStopLiveGps && <button type="button" onClick={onStopLiveGps}>Stop tracking</button>}
-            </div>
-          </div>
-          <div className="lr5-gps-reading">
-            {liveGpsLocation?.accuracyMeters && gpsTrackingEnabled
-              ? <span className={`lr3-accuracy ${liveGpsLocation.accuracyMeters > 100 ? "low" : ""}`}><Info size={13}/> GPS ±{Math.round(liveGpsLocation.accuracyMeters)} m</span>
-              : <span className="lr3-accuracy low">GPS unavailable</span>}
-            {gpsTrackingEnabled && gpsUpdatedAt && <small>Updated {new Date(gpsUpdatedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</small>}
-          </div>
-        </div>
         {driverLocationError && <p className="map-workspace-notice">{driverLocationError}</p>}
-        {locationCandidate && (
-          <div className="gps-location-check" role="alert">
-            <div>
-              <span>Check GPS result</span>
-              <strong>{locationCandidate.name}</strong>
-              <small>{locationCandidate.hint || "Approximate device location"}</small>
-            </div>
-            <div className="gps-location-check-actions">
-              <button type="button" onClick={onAcceptLocationCandidate}>Use GPS result</button>
-              <button type="button" onClick={onRejectLocationCandidate}>Keep {draft.pickup.name}</button>
-            </div>
-          </div>
-        )}
         {selectionMode && <p className="map-workspace-notice">Tap the map to set your {selectionMode}, then drag the pin for the exact spot.</p>}
-        <RouteSummaryCard
+      </section>
+
+      <section className="lr6-booking-flow">
+        <div className="linride-card lr6-combined-trip-card min-w-0 max-w-full">
+          <p className="linride-eyebrow">02 · PLAN &amp; BOOK</p>
+          <h2 className="lr6-booking-title">Trip details &amp; ride options</h2>
+          <p className="linride-card-desc mt-2">Review your route, choose a ride, and send your fare offer.</p>
+          <RouteSummaryCard
           pickup={draft.pickup}
           destination={draft.destination}
           route={route}
@@ -327,23 +287,10 @@ export function RiderHome({
           fareJmd={draft.offeredFareJmd}
           onRefresh={refreshRoute}
         />
-        <button
-          type="button"
-          className={`map-confirm-button ${pinsConfirmed ? "confirmed" : ""}`}
-          disabled={!route || routeLoading}
-          onClick={() => { setPinsConfirmed(true); onConfirmPickup?.(); }}
-        >
-          {pinsConfirmed ? "Pickup and destination confirmed" : "Confirm pickup and destination"}
-        </button>
-      </section>
-
-      <section className="linride-panel-grid lr2-booking-grid">
-        <div className="linride-card min-w-0 max-w-full">
-          <p className="linride-eyebrow">02 · CHOOSE YOUR RIDE</p>
-          <h2 className="text-3xl font-black">Make this trip yours.</h2>
-          <p className="linride-card-desc mt-2">
-            Choose your service, set a comfortable fare, and connect with a driver.
-          </p>
+          <div className="lr6-ride-selector">
+            <h3>Choose your ride</h3>
+            <p>Pick the service that suits your journey.</p>
+          </div>
 
           <div className="linride-field">
             <span className="linride-label">SELECT SERVICE</span>
@@ -405,10 +352,20 @@ export function RiderHome({
             </div>
           </div>
 
-          <button type="button" onClick={onFindDriver} disabled={!route || !pinsConfirmed} className="linride-submit">
+          <div className="lr6-booking-actions">
+            <button
+          type="button"
+          className={`map-confirm-button ${pinsConfirmed ? "confirmed" : ""}`}
+          disabled={!route || routeLoading}
+          onClick={() => { setPinsConfirmed(true); onConfirmPickup?.(); }}
+        >
+          {pinsConfirmed ? "Pickup and destination confirmed" : "Confirm pickup and destination"}
+        </button>
+                    <button type="button" onClick={onFindDriver} disabled={!route || !pinsConfirmed} className="linride-submit">
             Find my driver
           </button>
-          {!pinsConfirmed && <p className="mt-2 text-center text-xs font-bold text-charcoal/50">Confirm the map pins before finding a driver.</p>}
+          {!pinsConfirmed && <p className="mt-2 text-center text-xs font-bold text-charcoal/50">Confirm your pickup and destination to request a driver.</p>}
+          </div>
         </div>
 
         <div className="min-w-0 max-w-full space-y-4">
