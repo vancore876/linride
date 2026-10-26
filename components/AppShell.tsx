@@ -95,6 +95,7 @@ export function AppShell({
                 <div className="lr4-sidebar-tools">{gpsTools}</div>
               </details>
             )}
+            {currentView === "rider" && <div id="lr7-rider-sidebar-host" className="lr7-sidebar-host" aria-label="More rider tools" />}
             {currentView === "rider" && (onUseCurrentLocation || onSetPickupPin || onViewMap) && (
               <div className="lr4-sidebar-map-actions">
                 <span className="lr2-sidebar-caption">QUICK ROUTE ACTIONS</span>
