@@ -499,14 +499,17 @@ export default function LinRideMap({
     geometryCoordinates(route.routeGeometry).forEach((coordinate) => bounds.extend(coordinate as [number, number]));
     if (validPlace(pickup)) bounds.extend([pickup!.lng, pickup!.lat]);
     if (validPlace(destination)) bounds.extend([destination!.lng, destination!.lat]);
-    map.fitBounds(bounds, {
-      padding: { top: 80, right: 70, bottom: 110, left: 70 },
-      maxZoom: 16,
-      duration: 900,
-      pitch: perspective === "3d" ? 52 : 0,
-      bearing: perspective === "3d" ? -18 : 0
-    });
-  }, [destination, perspective, pickup, ready, route]);
+    // Do not repeatedly jump to fit the route while the map is following the rider.
+    if (!gpsTrackingEnabled || !followDevice) {
+      map.fitBounds(bounds, {
+        padding: { top: 80, right: 70, bottom: 110, left: 70 },
+        maxZoom: 16,
+        duration: 900,
+        pitch: perspective === "3d" ? 52 : 0,
+        bearing: perspective === "3d" ? -18 : 0
+      });
+    }
+  }, [destination, followDevice, gpsTrackingEnabled, perspective, pickup, ready, route]);
 
   useEffect(() => {
     const map = mapRef.current;
