@@ -3236,3 +3236,48 @@ h4,
 @keyframes lr5-gps-pulse{from{transform:scale(.55);opacity:.9}to{transform:scale(1.6);opacity:0}}
 @media(max-width:620px){.lr5-gps-reading{align-items:flex-start}.lr3-location-actions{width:100%}.lr3-location-actions button{flex:1}}
 @media(prefers-reduced-motion:reduce){.linride-device-location-dot:after{animation:none}}
+
+/* V6 rider booking: one card for route, ride type and fare; GPS lives in the drawer. */
+.lr6-booking-flow{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;margin:16px 0 0}
+.lr6-combined-trip-card{min-width:0;max-width:100%;border:1px solid var(--lr2-border);border-radius:22px;padding:clamp(15px,2.5vw,27px);background:rgb(var(--color-surface));box-shadow:0 13px 35px rgba(19,54,59,.055)}
+.lr6-booking-title{font-size:clamp(23px,3vw,32px);line-height:1.16;letter-spacing:-.04em;font-weight:900;margin:6px 0;color:rgb(var(--color-text))}
+.lr6-combined-trip-card .map-route-summary{margin:19px 0 0;padding:16px;background:rgb(var(--color-page));box-shadow:none;border:1px solid var(--lr2-border);border-radius:16px}
+.lr6-combined-trip-card .map-route-summary-head strong{white-space:normal;line-height:1.35}
+.lr6-combined-trip-card .map-route-metrics{gap:8px}
+.lr6-combined-trip-card .map-route-metrics>span{background:rgb(var(--color-surface));border:1px solid var(--lr2-border);border-radius:11px}
+.lr6-combined-trip-card .map-route-address{overflow-wrap:anywhere}
+.lr6-ride-selector{border-top:1px solid var(--lr2-border);padding-top:19px;margin:21px 0 13px}
+.lr6-ride-selector h3{font-size:17px;line-height:1.25;color:rgb(var(--color-text));font-weight:900}
+.lr6-ride-selector p{font-size:12px;color:rgb(var(--color-text)/.62);font-weight:650;margin-top:4px}
+.lr6-booking-actions{border-top:1px solid var(--lr2-border);display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:23px;padding-top:17px}
+.lr6-booking-actions .map-confirm-button,.lr6-booking-actions .linride-submit{display:flex;align-items:center;justify-content:center;min-width:0;min-height:53px;margin:0!important;padding:12px 13px;border-radius:13px;font-size:12px;font-weight:900;text-align:center;line-height:1.4}
+.lr6-booking-actions .map-confirm-button:disabled{opacity:.56}
+.lr6-booking-actions .linride-submit:disabled{opacity:.55}
+.lr6-booking-flow>.min-w-0{min-width:0}
+/* Sidebar GPS pane: readable at 280–330px and scrollable on a small phone. */
+.lr6-gps-attention{font-size:10px;font-weight:900;border-radius:999px;padding:3px 7px;color:#1d3925;background:#caf3a7;margin-left:auto}
+.lr6-gps-settings{display:grid;gap:11px;color:#e7f8ed;font-size:12px}
+.lr6-gps-status{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
+.lr6-gps-status strong{font-size:12px;color:#d2f8b3}
+.lr6-gps-indicator{display:inline-flex;align-items:center;gap:6px;padding:6px 9px;background:rgba(255,255,255,.1);border-radius:99px;color:#d8e9e1;font-size:11px;font-weight:850}
+.lr6-gps-indicator.is-live{background:#1c7850;color:#fff}
+.lr6-gps-description,.lr6-gps-helper{margin:0;color:#d4e6de;font-size:12px;line-height:1.55}
+.lr6-gps-helper{color:#a7c6b9}
+.lr6-gps-warning{display:flex;align-items:flex-start;gap:7px;color:#ffe3ac;background:rgba(176,108,23,.14);border-radius:10px;padding:8px;font-size:11px;line-height:1.45}
+.lr6-gps-updated{font-size:10px;color:#a9cfbc}
+.lr6-gps-actions{display:grid;gap:7px}
+.lr6-gps-actions button,.lr6-gps-candidate button{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:41px;padding:10px;border:1px solid rgba(217,251,228,.22);border-radius:11px;background:rgba(214,242,221,.11);color:#edf8ec;font-size:11px;font-weight:850;text-align:center;transition:background .18s,transform .18s}
+.lr6-gps-actions button:hover:not(:disabled),.lr6-gps-candidate button:hover:not(:disabled){background:rgba(214,242,221,.21);transform:translateY(-1px)}
+.lr6-gps-actions button:disabled{opacity:.6}
+.lr6-gps-actions button:first-child{background:#d3f9bf;color:#183f2c}
+.lr6-gps-candidate{padding:12px;background:#224839;border:1px solid #a8d48980;border-radius:12px}
+.lr6-gps-candidate>strong{display:flex;align-items:center;gap:6px;font-size:12px;color:#e9ffd8}
+.lr6-gps-candidate>p{font-size:12px;font-weight:750;color:#fff;margin:9px 0 4px;overflow-wrap:anywhere}
+.lr6-gps-candidate>small{display:block;font-size:10px;color:#b3d6c3}
+.lr6-gps-candidate>div{display:grid;gap:7px;margin-top:11px}
+.lr6-gps-candidate>div>button:first-child{background:#c9f4ac;color:#173d2a}
+.lr6-gps-note{font-size:10px;line-height:1.5;color:#a8c5b7}
+.lr4-sidebar-details>summary .lr6-gps-attention+svg{margin-left:0}
+@media(max-width:960px){.lr6-booking-flow{margin:12px 0 0}.lr6-booking-actions{grid-template-columns:1fr}.lr6-combined-trip-card .map-route-summary{margin:13px 0 0}.lr6-combined-trip-card .map-route-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.lr6-combined-trip-card .map-route-metrics>span:last-child{grid-column:1/-1}}
+@media(max-width:620px){.lr6-combined-trip-card{padding:16px 12px;border-radius:17px}.lr6-booking-title{font-size:24px}.lr6-ride-selector{padding-top:15px;margin-top:15px}.lr6-booking-actions .map-confirm-button,.lr6-booking-actions .linride-submit{min-height:51px;font-size:13px}.lr6-combined-trip-card .map-route-summary{padding:12px}.lr6-combined-trip-card .map-route-metrics b{font-size:15px}}
+@media(prefers-reduced-motion:reduce){.lr6-gps-actions button,.lr6-gps-candidate button{transition:none!important;transform:none!important}}
