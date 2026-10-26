@@ -15,7 +15,7 @@ export function RouteSummaryCard({ pickup, destination, route, loading, error, f
   return (
     <section className="map-route-summary" aria-live="polite">
       <div className="map-route-summary-head">
-        <div><span>Trip summary</span><strong>{pickup.name} to {destination.name}</strong></div>
+        <div><span>Route overview</span><strong>{pickup.name} to {destination.name}</strong></div>
         <button type="button" onClick={onRefresh} aria-label="Refresh route"><RefreshCw size={17} /></button>
       </div>
       {loading && <p className="map-route-message">Calculating the best driving route...</p>}

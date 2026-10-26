@@ -20,6 +20,8 @@ type AppShellProps = {
   accountName?: string;
   accountTools?: React.ReactNode;
   notificationTools?: React.ReactNode;
+  gpsTools?: React.ReactNode;
+  gpsNeedsConfirmation?: boolean;
   onUseCurrentLocation?: () => void;
   onSetPickupPin?: () => void;
   onViewMap?: () => void;
@@ -42,10 +44,11 @@ const pageTitle: Record<AppView, { title: string; kicker: string; description: s
 export function AppShell({
   currentView, children, onChangeView, onBackHome,
   allowAdmin = false, theme, onToggleTheme, journey,
-  accountName, accountTools, notificationTools, onUseCurrentLocation, onSetPickupPin, onViewMap
+  accountName, accountTools, notificationTools, gpsTools, gpsNeedsConfirmation = false, onUseCurrentLocation, onSetPickupPin, onViewMap
 }: AppShellProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   useEffect(() => { setDrawerOpen(false); }, [currentView]);
+  useEffect(() => { if (gpsNeedsConfirmation && currentView === "rider") setDrawerOpen(true); }, [gpsNeedsConfirmation, currentView]);
   useEffect(() => { if (!drawerOpen) return; const handleKey = (event: KeyboardEvent) => { if (event.key === "Escape") setDrawerOpen(false); }; document.addEventListener("keydown", handleKey); return () => document.removeEventListener("keydown", handleKey); }, [drawerOpen]);
   const current = pageTitle[currentView];
   const visible = sections.filter((section) => section.view !== "admin" || allowAdmin);
@@ -86,10 +89,15 @@ export function AppShell({
             {accountName && <div className="lr4-account-summary"><span className="lr4-account-avatar"><UserRound size={20} /></span><div><strong>{accountName}</strong><small>Your LinRide profile</small></div></div>}
             {accountTools && <details className="lr4-sidebar-details"><summary><UserRound size={18} /> Profile picture <ChevronRight size={17} /></summary><div className="lr4-sidebar-tools">{accountTools}</div></details>}
             {notificationTools && <details className="lr4-sidebar-details"><summary><Bell size={18} /> Phone alerts <ChevronRight size={17} /></summary><div className="lr4-sidebar-tools">{notificationTools}</div></details>}
+            {currentView === "rider" && gpsTools && (
+              <details className="lr4-sidebar-details" open={gpsNeedsConfirmation ? true : undefined}>
+                <summary><LocateFixed size={18} /> Location &amp; accuracy {gpsNeedsConfirmation && <span className="lr6-gps-attention">Review</span>} <ChevronRight size={17} /></summary>
+                <div className="lr4-sidebar-tools">{gpsTools}</div>
+              </details>
+            )}
             {currentView === "rider" && (onUseCurrentLocation || onSetPickupPin || onViewMap) && (
               <div className="lr4-sidebar-map-actions">
                 <span className="lr2-sidebar-caption">QUICK ROUTE ACTIONS</span>
-                {onUseCurrentLocation && <button type="button" onClick={() => { setDrawerOpen(false); onUseCurrentLocation(); }}><LocateFixed size={18} /> Update GPS</button>}
                 {onSetPickupPin && <button type="button" onClick={() => { setDrawerOpen(false); onSetPickupPin(); }}><MapPin size={18} /> Set pickup pin</button>}
                 {onViewMap && <button type="button" onClick={() => { setDrawerOpen(false); onViewMap(); }}><Navigation size={18} /> View trip map</button>}
               </div>
