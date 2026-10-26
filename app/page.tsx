@@ -8,6 +8,7 @@ import { DriverMode } from "@/components/DriverMode";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { NotificationSettings } from "@/components/NotificationSettings";
 import { ProfilePhotoSetup } from "@/components/ProfilePhotoSetup";
+import { RiderGpsSettings } from "@/components/RiderGpsSettings";
 import { RiderHome } from "@/components/RiderHome";
 import { TripCommunicationPanel } from "@/components/TripCommunicationPanel";
 import { WelcomeScreen } from "@/components/WelcomeScreen";
@@ -1390,6 +1391,35 @@ export default function Home() {
   ) : null;
   const notificationTools = !localPreview && profile && !requiresProfilePhoto && (currentView === "rider" || currentView === "driver")
     ? <NotificationSettings role={currentView} /> : null;
+  const gpsTools = currentView === "rider" ? (
+    <RiderGpsSettings
+      permission={locationPermission}
+      notice={locationNotice}
+      candidate={locationCandidate}
+      livePosition={liveGpsLocation}
+      tracking={gpsTrackingEnabled}
+      pickupFollowsGps={autoFollowGpsPickup}
+      updatedAt={gpsUpdatedAt}
+      onRetry={() => void requestRiderLocation({ startSearch: false })}
+      onStop={() => {
+        setGpsTrackingEnabled(false);
+        setAutoFollowGpsPickup(false);
+        setLiveGpsLocation(null);
+        setGpsUpdatedAt(null);
+        setLocationNotice("Live GPS stopped. Your pickup pin remains where you left it.");
+      }}
+      onFineTunePickup={() => {
+        setAutoFollowGpsPickup(false);
+        setPickupPinRequest((current) => current + 1);
+      }}
+      onAcceptCandidate={() => { if (locationCandidate) applyRiderGpsPickup(locationCandidate); }}
+      onRejectCandidate={() => {
+        setAutoFollowGpsPickup(false);
+        setLocationCandidate(null);
+        setLocationNotice(`Kept ${draft.pickup.name} as your pickup. Adjust the map pin whenever you like.`);
+      }}
+    />
+  ) : null;
   return (
     <AppShell
       currentView={currentView}
@@ -1417,6 +1447,8 @@ export default function Home() {
       accountName={profile?.full_name || undefined}
       accountTools={profile?.avatar_url ? profilePhotoTools : null}
       notificationTools={notificationTools}
+      gpsTools={gpsTools}
+      gpsNeedsConfirmation={Boolean(locationCandidate)}
       onUseCurrentLocation={() => void requestRiderLocation({ startSearch: false })}
       onSetPickupPin={() => { setAutoFollowGpsPickup(false); setPickupPinRequest((current) => current + 1); }}
       onViewMap={() => document.getElementById("lr3-map-anchor")?.scrollIntoView({ behavior: "smooth", block: "start" })}
@@ -1441,18 +1473,8 @@ export default function Home() {
           counterOfferJmd={counterOfferJmd}
           locationNotice={locationNotice}
           locationPermission={locationPermission}
-          locationCandidate={locationCandidate}
           liveGpsLocation={liveGpsLocation}
           gpsTrackingEnabled={gpsTrackingEnabled}
-          autoFollowGpsPickup={autoFollowGpsPickup}
-          gpsUpdatedAt={gpsUpdatedAt}
-          onStopLiveGps={() => {
-            setGpsTrackingEnabled(false);
-            setAutoFollowGpsPickup(false);
-            setLiveGpsLocation(null);
-            setGpsUpdatedAt(null);
-            setLocationNotice("Live GPS stopped. Your pickup pin stays where you left it.");
-          }}
           onConfirmPickup={() => setAutoFollowGpsPickup(false)}
           drivers={localPreview ? mockDrivers : []}
           acceptedDriver={acceptedDriver}
@@ -1477,14 +1499,6 @@ export default function Home() {
             }
           }}
           onUseCurrentLocation={() => void requestRiderLocation({ startSearch: false })}
-          onAcceptLocationCandidate={() => {
-            if (locationCandidate) applyRiderGpsPickup(locationCandidate);
-          }}
-          onRejectLocationCandidate={() => {
-            setAutoFollowGpsPickup(false);
-            setLocationCandidate(null);
-            setLocationNotice(`Kept ${draft.pickup.name} as your pickup. Use Set pickup to place the pin more exactly.`);
-          }}
           onFindDriver={() => {
             void requestRiderLocationBeforeBooking();
           }}
