@@ -6,8 +6,6 @@ import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { BriefcaseBusiness, Car, GraduationCap, Package, Route, Search, ShoppingBag, Truck, Zap } from "lucide-react";
 import { BankWithdrawalCard, WithdrawalFormValues } from "@/components/BankWithdrawalCard";
-import { BoostTagSelector } from "@/components/BoostTagSelector";
-import { CountryServiceDetailsCard } from "@/components/CountryServiceDetailsCard";
 import { LocalPlaceChips } from "@/components/LocalPlaceChips";
 import { LocationSearch } from "@/components/maps/LocationSearch";
 import { MapMarkerControls } from "@/components/maps/MapMarkerControls";
@@ -16,7 +14,6 @@ import { PointsWalletCard } from "@/components/PointsWalletCard";
 import { DriverOfferSelection } from "@/components/DriverOfferSelection";
 import { RiderTripScreen } from "@/components/RiderTripScreen";
 import { ServiceHistoryCard } from "@/components/ServiceHistoryCard";
-import { SharedRidePanel } from "@/components/SharedRidePanel";
 import { SupportButton } from "@/components/SupportButton";
 import { TripPinCard } from "@/components/TripPinCard";
 import { VehicleTypeSelector } from "@/components/VehicleTypeSelector";
@@ -42,7 +39,6 @@ import {
   TripRecord,
   WithdrawalRequest
 } from "@/types/linride";
-import { ZonePricingCard } from "@/components/ZonePricingCard";
 import { useDriverLocations } from "@/hooks/useDriverLocations";
 import { useLinRideRoute } from "@/hooks/useLinRideRoute";
 import { MapSelectionMode } from "@/lib/maps/types";
@@ -113,15 +109,13 @@ function SimpleSection({
   title,
   helper,
   children,
-  defaultOpen = false
 }: {
   title: string;
   helper: string;
   children: ReactNode;
-  defaultOpen?: boolean;
 }) {
   return (
-    <details open={defaultOpen} className="linride-card">
+    <details className="linride-card">
       <summary className="cursor-pointer list-none">
         <span className="flex items-center justify-between gap-3">
           <span>
@@ -175,8 +169,6 @@ export function RiderHome({
   onRequestWithdrawal,
   serviceHistory = mockServiceHistory
 }: RiderHomeProps) {
-  const showErrandDetails =
-    draft.serviceType === "Errand / Pickup" || draft.serviceType === "Errand" || draft.serviceType === "Shopping pickup";
   const tripDriver = acceptedDriver ?? drivers[0];
   const [selectionMode, setSelectionMode] = useState<MapSelectionMode>(null);
   const [pinsConfirmed, setPinsConfirmed] = useState(false);
@@ -222,8 +214,8 @@ export function RiderHome({
 
   return (
     <div className="linride-screen lr2-rider-screen">
-      <section className="trip-map-workspace lr2-map-workspace">
-        <div className="lr2-map-heading"><div><span className="lr2-kicker">PLAN YOUR ROUTE</span><h2>Your journey starts here</h2></div><span className="lr2-live-map-badge"><span /> Live map</span></div>
+      <section className="trip-map-workspace lr2-map-workspace lr8-unified-trip-panel" aria-labelledby="lr8-trip-title">
+        <div className="lr2-map-heading"><div><span className="lr2-kicker">LINRIDE · YOUR JOURNEY</span><h2 id="lr8-trip-title">Plan &amp; book your ride</h2></div><span className="lr2-live-map-badge"><span /> Live map</span></div>
         <div id="lr3-map-anchor" className="linride-map-shell lr2-rider-map-shell">
           <LinRideMap
             pickup={draft.pickup}
@@ -242,7 +234,7 @@ export function RiderHome({
             onDestinationMove={(destination) => updateTripPlace("destination", destination)}
           />
         </div>
-        <p className="lr4-map-hint">Tap Set pickup or Set destination below to choose a position on the map.</p>
+        <div className="lr8-places-heading"><strong>Where to?</strong><span>Choose your pickup and destination</span></div>
         <div className="map-search-grid lr2-search-grid">
           <LocationSearch label="Pickup" value={draft.pickup} onChange={(pickup) => updateTripPlace("pickup", pickup)} />
           <LocationSearch label="Destination" value={draft.destination} onChange={(destination) => updateTripPlace("destination", destination)} />
@@ -257,9 +249,9 @@ export function RiderHome({
         />
         {driverLocationError && <p className="map-workspace-notice">{driverLocationError}</p>}
         {selectionMode && <p className="map-workspace-notice">Tap the map to set your {selectionMode}, then drag the pin for the exact spot.</p>}
-        <section className="lr7-unified-booking" aria-labelledby="lr7-booking-title">
+        <div className="lr7-unified-booking lr8-booking-details">
         <div className="lr7-booking-body lr6-combined-trip-card min-w-0 max-w-full">
-          <h2 className="lr7-booking-title" id="lr7-booking-title">Your trip</h2>
+          <h3 className="lr7-booking-title">Ride options &amp; fare</h3>
           <p className="lr7-booking-subtitle">Check your route, choose a ride and book.</p>
           <RouteSummaryCard
             pickup={draft.pickup}
@@ -284,15 +276,19 @@ export function RiderHome({
             </details>
           </div>
 
-          <label className="linride-field block">
-            <span className="linride-label">Notes for the driver</span>
-            <textarea
+          <details className="lr8-driver-notes">
+            <summary>+ Add a note for the driver</summary>
+            <label className="linride-field block">
+              <span className="linride-label">Pickup instructions</span>
+              <textarea
               value={draft.customerNotes || ""}
               onChange={(event) => onDraftChange({ ...draft, customerNotes: event.target.value })}
               className="linride-textarea"
-              placeholder="Example: rough road past the church, fragile box, heavy item"
+              placeholder="Example: Wait by the gate opposite the church"
+              rows={2}
             />
-          </label>
+            </label>
+          </details>
 
           <div className="linride-row-2">
             <div className="linride-field">
@@ -392,7 +388,7 @@ export function RiderHome({
             <TripPinCard mode="display" pin={tripPin} verified={tripPinVerified} message={tripPinMessage} onVerify={onVerifyTripPin} />
           )}
         </div>
-        </section>
+        </div>
       </section>
 
       {sidebarHost && createPortal(
@@ -420,17 +416,6 @@ export function RiderHome({
             </div>
           </details>
       <div className="mt-4 space-y-4">
-        <SimpleSection
-          title="Advanced trip settings"
-          helper="Special service preferences and additional fare details."
-          defaultOpen={showErrandDetails}
-        >
-          <ZonePricingCard destination={draft.destination} boostTags={draft.boostTags} />
-          <BoostTagSelector value={draft.boostTags} destination={draft.destination} onChange={(boostTags) => onDraftChange({ ...draft, boostTags })} />
-          <SharedRidePanel isShared={draft.isShared || draft.serviceType === "Shared Ride" || draft.serviceType === "Route/shared ride"} />
-          <CountryServiceDetailsCard draft={draft} onChange={onDraftChange} />
-        </SimpleSection>
-
         <SimpleSection title="Wallet and past trips" helper="Check points, withdrawals, and ride history when you need them.">
           <PointsWalletCard wallet={pointsWallet} transactions={pointTransactions} rules={pointsRules} />
           <BankWithdrawalCard
