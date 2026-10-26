@@ -4,7 +4,6 @@ import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
-import Image from "next/image";
 import { BriefcaseBusiness, Car, GraduationCap, Package, Route, Search, ShoppingBag, Truck, Zap } from "lucide-react";
 import { BankWithdrawalCard, WithdrawalFormValues } from "@/components/BankWithdrawalCard";
 import { BoostTagSelector } from "@/components/BoostTagSelector";
@@ -35,7 +34,6 @@ import {
   PointsRuleSettings,
   PointsTransaction,
   PointsWallet,
-  Profile,
   RideRequestDraft,
   RideStatus,
   RouteDetails,
@@ -55,7 +53,6 @@ const LinRideMap = dynamic(() => import("@/components/maps/LinRideMap"), {
 });
 
 type RiderHomeProps = {
-  rider: Profile;
   pickupPinRequest?: number;
   draft: RideRequestDraft;
   rideStatus: RideStatus;
@@ -140,7 +137,6 @@ function SimpleSection({
 }
 
 export function RiderHome({
-  rider,
   pickupPinRequest = 0,
   draft,
   rideStatus,
@@ -226,18 +222,6 @@ export function RiderHome({
 
   return (
     <div className="linride-screen lr2-rider-screen">
-      <section className="passenger-intro">
-        <div>
-          <p className="linride-eyebrow">EXPLORE · LINRIDE JAMAICA</p>
-          <h1>Good to see you, {rider.fullName.split(" ")[0]}<span className="lr2-wave">.</span></h1>
-          <p>Every corner of Jamaica is a new possibility. Where are we heading?</p>
-        </div>
-        <div className="passenger-intro-profile">
-          {rider.avatarUrl && <Image unoptimized width={58} height={58} src={rider.avatarUrl} alt={`${rider.fullName} profile`} />}
-          <span className="passenger-intro-badge">Jamaica-wide</span>
-        </div>
-      </section>
-
       <section className="trip-map-workspace lr2-map-workspace">
         <div className="lr2-map-heading"><div><span className="lr2-kicker">PLAN YOUR ROUTE</span><h2>Your journey starts here</h2></div><span className="lr2-live-map-badge"><span /> Live map</span></div>
         <div id="lr3-map-anchor" className="linride-map-shell lr2-rider-map-shell">
@@ -274,7 +258,7 @@ export function RiderHome({
         {driverLocationError && <p className="map-workspace-notice">{driverLocationError}</p>}
         {selectionMode && <p className="map-workspace-notice">Tap the map to set your {selectionMode}, then drag the pin for the exact spot.</p>}
         <section className="lr7-unified-booking" aria-labelledby="lr7-booking-title">
-        <div className="lr7-booking-body min-w-0 max-w-full">
+        <div className="lr7-booking-body lr6-combined-trip-card min-w-0 max-w-full">
           <h2 className="lr7-booking-title" id="lr7-booking-title">Your trip</h2>
           <p className="lr7-booking-subtitle">Check your route, choose a ride and book.</p>
           <RouteSummaryCard
@@ -360,8 +344,8 @@ export function RiderHome({
             >
               {pinsConfirmed ? "Pickup and destination confirmed" : "Confirm pickup and destination"}
             </button>
-            <button type="button" onClick={onFindDriver} disabled={!route || !pinsConfirmed} className="linride-submit">
-              Find my driver
+            <button type="button" onClick={onFindDriver} disabled={!route || !pinsConfirmed || hasActiveRideRequest || Boolean(activeTrip)} className="linride-submit">
+              {hasActiveRideRequest ? "Request sent" : "Find my driver"}
             </button>
             {!pinsConfirmed && <p className="lr6-booking-hint">Confirm your pickup and destination to request a driver.</p>}
           </div>
