@@ -118,3 +118,12 @@
 @media(max-width:980px){.auth5-page{grid-template-columns:1fr}.auth5-story{display:none}.auth5-panel{min-height:100dvh}.auth5-card{margin:38px auto}.auth5-page .auth2-mobile-brand{display:block}}
 @media(max-width:540px){.auth5-card{margin:26px auto}.auth5-card h2{font-size:32px}.auth5-panel{padding:18px}.auth5-card .auth2-primary-action{min-height:56px}}
 @media(prefers-reduced-motion:reduce){.auth5-motion,.auth5-map-lines,.auth5-map-route,.auth5-card{animation:none!important;transition:none!important;transform:none!important}.auth5-map-route{stroke-dashoffset:0}}
+
+.auth5-page[data-theme="dark"] .auth5-panel{background:#11231c;color:#eef7ec}
+.auth5-page[data-theme="dark"] .auth5-card h2,.auth5-page[data-theme="dark"] .auth5-card .auth2-field>span,.auth5-page[data-theme="dark"] .auth5-card .auth2-role-fieldset legend{color:#edf8ec}
+.auth5-page[data-theme="dark"] .auth5-card .auth2-description,.auth5-page[data-theme="dark"] .auth5-card .auth2-auth-note{color:#b0c9b4}
+.auth5-page[data-theme="dark"] .auth5-card .auth2-auth-tabs{background:#1e3929}
+.auth5-page[data-theme="dark"] .auth5-card .auth2-auth-tabs .is-active{background:#355a41;color:#eff8e9}
+.auth5-page[data-theme="dark"] .auth5-card .auth2-role-option{background:#23422f;color:#e7f4e5;border-color:#365b40}
+.auth5-page[data-theme="dark"] .auth5-card .auth2-role-option.is-selected{background:#285e3d;border-color:#7ddc92}
+.auth5-page[data-theme="dark"] .auth5-panel .auth2-theme-button{background:#203e2d;color:#eff9e9;border-color:#43624c}
