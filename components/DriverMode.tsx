@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { Power, ShieldCheck } from "lucide-react";
+import { Power, ShieldCheck, Navigation, MapPin, TrendingUp } from "lucide-react";
 import { BankWithdrawalCard } from "@/components/BankWithdrawalCard";
 import { BusinessDeliveryPopup } from "@/components/BusinessDeliveryPopup";
 import { BusinessDeliveryActiveCard } from "@/components/BusinessDeliveryActiveCard";
@@ -133,7 +133,9 @@ export function DriverMode({
   }, [subscriptionStatus]);
 
   return (
-    <div className="linride-screen">
+    <div className="linride-screen lr2-driver-screen">
+      <section className="lr2-driver-intro"><div><span className="lr2-kicker">DRIVER DASHBOARD</span><h1>Ready when you are.</h1><p>Go online to receive real requests from passengers and businesses nearby.</p></div><div className={`lr2-driver-presence ${online ? "is-online" : ""}`}><span />{online ? "Taking requests" : "Currently offline"}</div></section>
+      <div className="lr2-driver-summary"><div><Navigation size={19} /><span>Live location</span><strong>{online ? (liveLocation.status === "tracking" ? "Sharing GPS" : "Locating…") : "Paused"}</strong></div><div><MapPin size={19} /><span>Available jobs</span><strong>{requests.length}</strong></div><div><TrendingUp size={19} /><span>Weekly pass</span><strong>{hasActivePass ? "Active" : "Inactive"}</strong></div></div>
       <section className="linride-panel-grid">
         <div className="linride-card">
           <div className="driver-profile-header flex items-start justify-between gap-4">
@@ -142,7 +144,7 @@ export function DriverMode({
                 {driver.profile.avatarUrl && <Image unoptimized width={56} height={56} src={driver.profile.avatarUrl} alt={`${driver.profile.fullName} profile`} className="h-14 w-14 rounded-full border-4 border-linred object-cover" />}
                 <div className="min-w-0">
                   <p className="linride-eyebrow">Driver / Rider</p>
-                  <h2 className="break-words text-3xl font-black">Welcome, {driver.profile.fullName}</h2>
+                  <h2 className="break-words text-3xl font-black">{driver.profile.fullName}</h2>
                 </div>
               </div>
               <p className="mt-2 text-sm font-semibold text-charcoal/62">
@@ -219,7 +221,7 @@ export function DriverMode({
         <section className="linride-card">
           <div className="mb-4 flex items-center justify-between gap-3">
             <div>
-              <h3>Jobs near you</h3>
+              <h3>Requests near you</h3>
               <p className="linride-card-desc mb-0">Accept the fare, send your price, or skip it.</p>
             </div>
             <span className={`linride-status-badge ${online ? "linride-status-done" : "linride-status-pending"}`}>
