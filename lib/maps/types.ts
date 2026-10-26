@@ -12,6 +12,8 @@ export type MapSelectionMode = "pickup" | "destination" | null;
 
 export type LinRideMapProps = {
   pickup?: Place;
+  liveGpsLocation?: Place | null;
+  gpsTrackingEnabled?: boolean;
   destination?: Place;
   route?: RouteDetails | null;
   drivers?: LiveDriverLocation[];
