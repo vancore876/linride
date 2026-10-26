@@ -3328,3 +3328,59 @@ h4,
   .lr7-booking-body .lr6-ride-selector{margin-top:14px}
   .lr7-unified-booking .map-route-metrics{gap:8px}
 }
+
+/* V8 — one map / pickup / destination / plan & book surface. */
+.lr2-rider-screen .lr8-unified-trip-panel{background:rgb(var(--color-surface));border:1px solid var(--lr2-border);border-radius:20px;padding:clamp(11px,2.4vw,22px);box-shadow:0 12px 30px rgba(10,39,29,.08);margin-top:4px;overflow:visible}
+.lr8-unified-trip-panel .lr2-map-heading{margin-bottom:12px}
+.lr8-unified-trip-panel .lr2-map-heading h2{font-size:clamp(20px,3vw,27px);letter-spacing:-.045em}
+.lr8-unified-trip-panel .lr2-rider-map-shell{border-radius:16px;overflow:hidden}
+.lr8-places-heading{display:flex;align-items:baseline;flex-wrap:wrap;justify-content:space-between;gap:6px 13px;margin:17px 0 11px}
+.lr8-places-heading strong{font-size:16px;font-weight:900;color:rgb(var(--color-text))}
+.lr8-places-heading span{font-size:11px;font-weight:700;color:rgb(var(--color-text)/.6)}
+.lr8-unified-trip-panel .lr2-search-grid{gap:10px}
+.lr8-unified-trip-panel .map-marker-controls{margin:6px 0 10px;padding:9px 0;gap:7px}
+.lr8-unified-trip-panel .map-marker-controls button{border-radius:11px;transition:transform .2s ease,background .2s ease,border-color .2s ease}
+.lr8-unified-trip-panel .map-marker-controls button:active{transform:scale(.96)}
+.lr8-unified-trip-panel .lr8-booking-details{margin:12px 0 0;padding:18px 0 0;border-top:1px solid var(--lr2-border)}
+.lr8-unified-trip-panel .lr7-booking-body{margin:0;padding:0;border:0;background:none;box-shadow:none}
+.lr8-unified-trip-panel .lr7-booking-title{font-size:18px}
+.lr8-unified-trip-panel .lr7-booking-subtitle{font-size:11px}
+.lr8-unified-trip-panel .map-route-summary{background:rgb(var(--color-page));margin:12px 0 0;border:1px solid var(--lr2-border);box-shadow:none;border-radius:13px}
+.lr8-unified-trip-panel .lr6-ride-selector{margin:14px 0 11px;padding-top:13px}
+.lr8-unified-trip-panel .linride-pill{border-radius:11px}
+.lr8-driver-notes{margin:13px 0 10px;border:1px solid var(--lr2-border);border-radius:12px;padding:11px 13px;background:rgb(var(--color-page))}
+.lr8-driver-notes>summary{cursor:pointer;list-style:none;color:rgb(var(--color-text)/.76);font-size:12px;font-weight:850}
+.lr8-driver-notes>summary::-webkit-details-marker{display:none}
+.lr8-driver-notes[open]>summary{margin-bottom:11px}
+.lr8-driver-notes .linride-textarea{max-width:100%;min-height:64px}
+.lr8-unified-trip-panel .lr6-booking-actions{margin:17px 0 0;padding-top:15px}
+.lr8-unified-trip-panel .lr7-trip-progress{margin-top:12px}
+.lr8-unified-trip-panel .lr7-trip-progress:empty{display:none}
+/* Interactive map overlays. The route spark is a visualization, not a simulated driver. */
+.lr8-route-spark{display:block;position:relative;pointer-events:none;width:12px;height:12px;border:2px solid #fff;border-radius:50%;background:#baff52;box-shadow:0 0 0 4px #c2fa6b45,0 0 18px 6px #c2fa6b92;animation:lr8-route-glimmer 1.5s ease-in-out infinite alternate}
+@keyframes lr8-route-glimmer{to{box-shadow:0 0 0 8px #c2fa6b16,0 0 24px 9px #c2fa6b72;transform:scale(.88)}}
+.lr8-map-extra-controls{position:absolute;z-index:14;top:111px;left:14px;display:flex;gap:8px;pointer-events:none}
+.lr8-map-extra-controls button{pointer-events:auto;display:flex;gap:7px;align-items:center;justify-content:center;min-height:34px;padding:7px 10px;border:1px solid #d0dccd;border-radius:10px;background:#f7fff6ed;color:#1b4731;font-weight:900;font-size:11px;box-shadow:0 4px 14px #0f35222c;backdrop-filter:blur(8px)}
+.lr8-map-extra-controls button:hover{background:#e2fbdc}
+.lr8-map-place-preview{display:grid;gap:8px;font-family:Inter,Arial,sans-serif;min-width:194px;padding:4px}
+.lr8-map-place-preview strong{font-size:14px;line-height:1.3;color:#133b27}
+.lr8-map-place-preview small{font-size:10px;color:#52705a;line-height:1.4}
+.lr8-map-place-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:3px}
+.lr8-map-place-actions button{min-width:0;min-height:38px;padding:7px;border:1px solid #bee4b9;border-radius:9px;background:#e3f7de;color:#17452b;font-size:10px;line-height:1.3;font-weight:850;cursor:pointer}
+.lr8-map-place-actions button:first-child{background:#225c3c;color:#fff;border-color:#225c3c}
+.lr8-map-place-actions button:hover{filter:brightness(1.06);transform:translateY(-1px)}
+.lr8-map-place-actions button:disabled{opacity:.55;cursor:wait}
+.lr8-map-preview-popup .maplibregl-popup-content{background:#f6fff1;border-radius:14px;border:1px solid #dceac9;box-shadow:0 13px 32px rgba(17,41,25,.23);padding:12px}
+.lr8-map-preview-popup .maplibregl-popup-tip{border-top-color:#f6fff1}
+.lr8-map-preview-popup .maplibregl-popup-close-button{font-size:20px;padding:2px 9px;color:#28573a}
+.lr8-unified-trip-panel .linride-map-marker-pickup,.lr8-unified-trip-panel .linride-map-marker-destination{animation:lr8-pin-bounce .45s cubic-bezier(.2,.8,.3,1) both}
+@keyframes lr8-pin-bounce{from{opacity:.5;translate:0 -14px}to{opacity:1;translate:0 0}}
+@media(max-width:960px){.lr2-rider-screen .lr8-unified-trip-panel{margin-top:0;padding:11px 10px;border-radius:17px}.lr8-unified-trip-panel .lr8-booking-details{padding-top:15px;margin-top:7px}.lr8-unified-trip-panel .lr2-map-heading h2{font-size:21px}.lr8-places-heading{margin-top:15px}}
+@media(max-width:620px){.lr8-map-extra-controls{top:102px;left:10px}.lr8-unified-trip-panel .map-marker-controls{grid-template-columns:repeat(2,minmax(0,1fr))}.lr8-unified-trip-panel .map-marker-controls button{min-height:43px}.lr8-unified-trip-panel .lr2-rider-map-shell .linride-map-canvas{min-height:clamp(315px,47svh,450px)}}
+@media(prefers-reduced-motion:reduce){.lr8-route-spark,.lr8-unified-trip-panel .linride-map-marker-pickup,.lr8-unified-trip-panel .linride-map-marker-destination{animation:none!important}.lr8-map-place-actions button,.lr8-unified-trip-panel .map-marker-controls button{transition:none!important}}
+
+.lr8-service-choice{margin-top:15px}
+.lr8-route-legend{color:#305e3e!important;gap:4px}
+.lr8-route-legend svg{color:#4dbb56}
+.lr8-unified-trip-panel .map-route-address{display:none}
+@media(max-width:730px){.lr8-route-legend{display:none!important}}
