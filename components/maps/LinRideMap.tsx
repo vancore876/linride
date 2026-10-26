@@ -15,6 +15,7 @@ import { LiveDriverLocation, Place } from "@/types/linride";
 const LINSTEAD_CENTER: [number, number] = [-77.031, 18.1366];
 const BUILDING_LAYER_ID = "linride-3d-buildings";
 const PICKUP_ACCURACY_SOURCE_ID = "linride-pickup-accuracy";
+const LIVE_ACCURACY_SOURCE_ID = "linride-device-gps-accuracy";
 const TELEPORT_DISTANCE_METERS = 2500;
 
 function distanceBetween(a: [number, number], b: [number, number]) {
@@ -153,6 +154,8 @@ function animateMarker(
 
 export default function LinRideMap({
   pickup,
+  liveGpsLocation,
+  gpsTrackingEnabled = false,
   destination,
   route,
   drivers = [],
@@ -166,6 +169,8 @@ export default function LinRideMap({
   const mapRef = useRef<MapLibreMap | null>(null);
   const pickupMarkerRef = useRef<Marker | null>(null);
   const destinationMarkerRef = useRef<Marker | null>(null);
+  const deviceMarkerRef = useRef<Marker | null>(null);
+  const lastDeviceFocusRef = useRef(0);
   const driverMarkersRef = useRef<globalThis.Map<string, Marker>>(new globalThis.Map());
   const driverFramesRef = useRef<globalThis.Map<string, number>>(new globalThis.Map());
   const driverDataRef = useRef<globalThis.Map<string, LiveDriverLocation>>(new globalThis.Map());
@@ -178,6 +183,7 @@ export default function LinRideMap({
   const [perspective, setPerspective] = useState<"3d" | "2d">("2d");
   const [mapStyle, setMapStyle] = useState<"streets" | "night">("streets");
   const [followAssigned, setFollowAssigned] = useState(Boolean(assignedDriverId));
+  const [followDevice, setFollowDevice] = useState(true);
   const [mapError, setMapError] = useState<string | null>(null);
   const [mapAttempt, setMapAttempt] = useState(0);
   const apiKey = getGeoapifyKey();
@@ -257,15 +263,9 @@ export default function LinRideMap({
       canvas.addEventListener("webglcontextrestored", handleContextRestored);
 
       activeMap.addControl(new maplibregl.NavigationControl({ showCompass: true, visualizePitch: true }), "top-right");
-      activeMap.addControl(
-        new maplibregl.GeolocateControl({
-          positionOptions: { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 },
-          trackUserLocation: false,
-          showUserLocation: true,
-          showAccuracyCircle: true
-        }),
-        "top-right"
-      );
+      // GPS is provided by the rider's single continuous watcher in app/page.tsx.
+      // Do not launch a second, disconnected geolocation request from the map control.
+      activeMap.on("dragstart", () => setFollowDevice(false));
       activeMap.addControl(new maplibregl.AttributionControl({
         compact: true,
         customAttribution: 'Powered by <a href="https://www.geoapify.com/" target="_blank">Geoapify</a> | <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap</a> | <a href="https://openmaptiles.org/" target="_blank">&copy; OpenMapTiles</a>'
@@ -301,6 +301,8 @@ export default function LinRideMap({
       canvas?.removeEventListener("webglcontextlost", handleContextLost);
       canvas?.removeEventListener("webglcontextrestored", handleContextRestored);
       popupRef.current?.remove();
+      deviceMarkerRef.current?.remove();
+      deviceMarkerRef.current = null;
       driverFrames.forEach((frame) => cancelAnimationFrame(frame));
       driverFrames.clear();
       driverMarkers.forEach((marker) => marker.remove());
@@ -365,7 +367,7 @@ export default function LinRideMap({
       });
       pickupMarkerRef.current = marker;
 
-      if (pickup?.accuracyMeters) {
+      if (pickup?.accuracyMeters && !liveGpsLocation) {
         const focusKey = `${pickup.lat.toFixed(6)}:${pickup.lng.toFixed(6)}`;
         if (lastGpsFocusRef.current !== focusKey) {
           lastGpsFocusRef.current = focusKey;
@@ -387,6 +389,52 @@ export default function LinRideMap({
       destinationMarkerRef.current = marker;
     }
   }, [destination, pickup, ready]);
+
+  // The blue device dot moves with every accepted browser GPS update. It is separate
+  // from the pickup marker, which remains pinned after manual selection/booking.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !ready) return;
+    const fillId = "linride-device-accuracy-fill";
+    const lineId = "linride-device-accuracy-outline";
+    const valid = gpsTrackingEnabled && liveGpsLocation && validPlace(liveGpsLocation);
+    if (!valid) {
+      deviceMarkerRef.current?.remove();
+      deviceMarkerRef.current = null;
+      if (map.getLayer(lineId)) map.removeLayer(lineId);
+      if (map.getLayer(fillId)) map.removeLayer(fillId);
+      if (map.getSource(LIVE_ACCURACY_SOURCE_ID)) map.removeSource(LIVE_ACCURACY_SOURCE_ID);
+      return;
+    }
+    const gps = liveGpsLocation!;
+    if (!deviceMarkerRef.current) {
+      const dot = document.createElement("div");
+      dot.className = "linride-device-location-dot";
+      dot.setAttribute("role", "img");
+      dot.setAttribute("aria-label", "Your live device position");
+      deviceMarkerRef.current = new maplibregl.Marker({ element: dot })
+        .setLngLat([gps.lng, gps.lat]).addTo(map);
+    } else deviceMarkerRef.current.setLngLat([gps.lng, gps.lat]);
+
+    const circle = {
+      type: "Feature" as const, properties: {},
+      geometry: accuracyCircle(gps.lat, gps.lng, Math.min(5000, Math.max(5, gps.accuracyMeters || 100)))
+    };
+    const existing = map.getSource(LIVE_ACCURACY_SOURCE_ID);
+    if (existing) {
+      (existing as maplibregl.GeoJSONSource).setData(circle);
+    } else {
+      map.addSource(LIVE_ACCURACY_SOURCE_ID, { type: "geojson", data: circle });
+      map.addLayer({ id: fillId, type: "fill", source: LIVE_ACCURACY_SOURCE_ID,
+        paint: { "fill-color": "#2899ff", "fill-opacity": 0.09 } });
+      map.addLayer({ id: lineId, type: "line", source: LIVE_ACCURACY_SOURCE_ID,
+        paint: { "line-color": "#2899ff", "line-opacity": 0.65, "line-width": 1.5 } });
+    }
+    if (followDevice && !selectionModeRef.current && Date.now() - lastDeviceFocusRef.current >= 700) {
+      lastDeviceFocusRef.current = Date.now();
+      map.easeTo({ center: [gps.lng, gps.lat], zoom: Math.max(15, map.getZoom()), duration: 450 });
+    }
+  }, [followDevice, gpsTrackingEnabled, liveGpsLocation, ready]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -570,6 +618,13 @@ export default function LinRideMap({
               <span>{distanceKm.toFixed(1)} km <b>{durationMinutes} min</b></span>
             )}
           </div>
+          {gpsTrackingEnabled && liveGpsLocation && (
+            <button type="button" className={`linride-map-follow ${followDevice ? "active" : ""}`} style={{ bottom: assignedDriverId ? 92 : 54 }}
+              onClick={() => setFollowDevice((current) => !current)}
+              aria-pressed={followDevice}>
+              <LocateFixed size={15} /> {followDevice ? "Following you" : "Follow my position"}
+            </button>
+          )}
           {assignedDriverId && (
             <button type="button" className={`linride-map-follow ${followAssigned ? "active" : ""}`} onClick={() => setFollowAssigned((current) => !current)} aria-pressed={followAssigned}>
               <LocateFixed size={15} /> {followAssigned ? "Following driver" : "Follow driver"}
