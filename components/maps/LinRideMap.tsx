@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, LocateFixed, Map as MapIcon, Radio, Layers3, Compass, ShieldCheck } from "lucide-react";
+import { Box, LocateFixed, Map as MapIcon, Radio, Layers3, Compass, ShieldCheck, Route as RouteIcon } from "lucide-react";
 import maplibregl, {
   ExpressionSpecification,
   LngLatBounds,
@@ -170,6 +170,7 @@ export default function LinRideMap({
   const pickupMarkerRef = useRef<Marker | null>(null);
   const destinationMarkerRef = useRef<Marker | null>(null);
   const deviceMarkerRef = useRef<Marker | null>(null);
+  const routeSparkRef = useRef<Marker | null>(null);
   const lastDeviceFocusRef = useRef(0);
   const driverMarkersRef = useRef<globalThis.Map<string, Marker>>(new globalThis.Map());
   const driverFramesRef = useRef<globalThis.Map<string, number>>(new globalThis.Map());
@@ -265,7 +266,8 @@ export default function LinRideMap({
       activeMap.addControl(new maplibregl.NavigationControl({ showCompass: true, visualizePitch: true }), "top-right");
       // GPS is provided by the rider's single continuous watcher in app/page.tsx.
       // Do not launch a second, disconnected geolocation request from the map control.
-      activeMap.on("dragstart", () => setFollowDevice(false));
+      // Manual taps, swipes, marker drags and pin selection never change GPS follow preference.
+      // Only the explicit Follow my position button changes that setting.
       activeMap.addControl(new maplibregl.AttributionControl({
         compact: true,
         customAttribution: 'Powered by <a href="https://www.geoapify.com/" target="_blank">Geoapify</a> | <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap</a> | <a href="https://openmaptiles.org/" target="_blank">&copy; OpenMapTiles</a>'
@@ -284,11 +286,51 @@ export default function LinRideMap({
         setReady(true);
       });
       activeMap.on("click", async (event) => {
-        if (!isJamaicaCoordinate(event.lngLat.lat, event.lngLat.lng)) return;
+        const { lat, lng } = event.lngLat;
+        if (!isJamaicaCoordinate(lat, lng)) return;
         const mode = selectionModeRef.current;
-        if (!mode || !callbacksRef.current.onMapSelect) return;
-        const place = await reverseGeocodeJamaica(event.lngLat.lat, event.lngLat.lng);
-        if (!cancelled) callbacksRef.current.onMapSelect(mode, place);
+        if (mode && callbacksRef.current.onMapSelect) {
+          const place = await reverseGeocodeJamaica(lat, lng).catch(() => ({
+            name: "Dropped pin", lat, lng, hint: "Selected on map"
+          }));
+          if (!cancelled) callbacksRef.current.onMapSelect(mode, place);
+          return;
+        }
+        // Tapping the map is an interactive place preview, not an instruction to
+        // switch off GPS following. The user explicitly chooses what to do next.
+        popupRef.current?.remove();
+        const preview = document.createElement("div");
+        preview.className = "lr8-map-place-preview";
+        const title = document.createElement("strong");
+        title.textContent = "Explore this spot";
+        const caption = document.createElement("small");
+        caption.textContent = `${lat.toFixed(5)}° N, ${Math.abs(lng).toFixed(5)}° W · Jamaica`;
+        const buttons = document.createElement("div");
+        buttons.className = "lr8-map-place-actions";
+        const choose = (kind: "pickup" | "destination", label: string) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.textContent = label;
+          button.addEventListener("click", async (clickEvent) => {
+            clickEvent.stopPropagation();
+            button.disabled = true;
+            button.textContent = "Finding address…";
+            const place = await reverseGeocodeJamaica(lat, lng).catch(() => ({
+              name: "Dropped pin", lat, lng, hint: "Selected on map"
+            }));
+            if (cancelled) return;
+            callbacksRef.current.onMapSelect?.(kind, place);
+            popupRef.current?.remove();
+            popupRef.current = null;
+          });
+          return button;
+        };
+        buttons.append(choose("pickup", "Pick up here"), choose("destination", "Drop off here"));
+        preview.append(title, caption, buttons);
+        popupRef.current = new maplibregl.Popup({ offset: 14, closeButton: true, className: "lr8-map-preview-popup", maxWidth: "260px" })
+          .setLngLat([lng, lat])
+          .setDOMContent(preview)
+          .addTo(activeMap);
       });
       observer = new ResizeObserver(() => activeMap.resize());
       observer.observe(container);
@@ -303,6 +345,8 @@ export default function LinRideMap({
       popupRef.current?.remove();
       deviceMarkerRef.current?.remove();
       deviceMarkerRef.current = null;
+      routeSparkRef.current?.remove();
+      routeSparkRef.current = null;
       driverFrames.forEach((frame) => cancelAnimationFrame(frame));
       driverFrames.clear();
       driverMarkers.forEach((marker) => marker.remove());
@@ -430,7 +474,7 @@ export default function LinRideMap({
       map.addLayer({ id: lineId, type: "line", source: LIVE_ACCURACY_SOURCE_ID,
         paint: { "line-color": "#2899ff", "line-opacity": 0.65, "line-width": 1.5 } });
     }
-    if (followDevice && !selectionModeRef.current && Date.now() - lastDeviceFocusRef.current >= 700) {
+    if (followDevice && Date.now() - lastDeviceFocusRef.current >= 700) {
       lastDeviceFocusRef.current = Date.now();
       map.easeTo({ center: [gps.lng, gps.lat], zoom: Math.max(15, map.getZoom()), duration: 450 });
     }
@@ -511,6 +555,53 @@ export default function LinRideMap({
     }
   }, [destination, followDevice, gpsTrackingEnabled, perspective, pickup, ready, route]);
 
+  // A visual route tracer runs only while the map is visible and motion is allowed.
+  // It is decorative route guidance, never an invented driver/car location.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !ready || !route) return;
+    const coordinates = geometryCoordinates(route.routeGeometry);
+    if (coordinates.length < 2 || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const distances = coordinates.slice(1).map((point, i) =>
+      distanceBetween(coordinates[i] as [number, number], point as [number, number])
+    );
+    const routeLength = distances.reduce((total, segment) => total + segment, 0);
+    if (routeLength < 10) return;
+
+    const element = document.createElement("span");
+    element.className = "lr8-route-spark";
+    element.setAttribute("role", "presentation");
+    const marker = new maplibregl.Marker({ element, anchor: "center" })
+      .setLngLat(coordinates[0] as [number, number]).addTo(map);
+    routeSparkRef.current = marker;
+    let frameId = 0;
+    let lastStep = 0;
+    const started = performance.now();
+    const frame = (now: number) => {
+      if (!document.hidden && now - lastStep >= 95) {
+        lastStep = now;
+        let remain = ((now - started) % 9500) / 9500 * routeLength;
+        for (let i = 0; i < distances.length; i += 1) {
+          if (remain <= distances[i] || i === distances.length - 1) {
+            const from = coordinates[i];
+            const to = coordinates[i + 1];
+            const ratio = Math.max(0, Math.min(1, distances[i] ? remain / distances[i] : 0));
+            marker.setLngLat([from[0] + (to[0] - from[0]) * ratio, from[1] + (to[1] - from[1]) * ratio]);
+            break;
+          }
+          remain -= distances[i];
+        }
+      }
+      frameId = requestAnimationFrame(frame);
+    };
+    frameId = requestAnimationFrame(frame);
+    return () => {
+      cancelAnimationFrame(frameId);
+      marker.remove();
+      if (routeSparkRef.current === marker) routeSparkRef.current = null;
+    };
+  }, [route, ready]);
+
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !ready) return;
@@ -580,6 +671,16 @@ export default function LinRideMap({
   const distanceKm = route ? route.distanceMeters / 1000 : null;
   const durationMinutes = route ? Math.max(1, Math.round(route.durationSeconds / 60)) : null;
 
+  const showWholeRoute = () => {
+    const map = mapRef.current;
+    if (!map || !route) return;
+    const points = geometryCoordinates(route.routeGeometry);
+    if (!points.length) return;
+    const bounds = new LngLatBounds();
+    points.forEach((point) => bounds.extend(point as [number, number]));
+    map.fitBounds(bounds, { padding: { top: 85, right: 55, bottom: 105, left: 55 }, maxZoom: 16, duration: 720 });
+  };
+
   const retryMapIn2D = () => {
     perspectiveRef.current = "2d";
     setPerspective("2d");
@@ -590,7 +691,7 @@ export default function LinRideMap({
 
   return (
     <div className="linride-map-stage">
-      <div ref={containerRef} className="linride-map-canvas" aria-label="LinRide interactive Jamaica route map. Tap Set pickup or Set destination before choosing a map location." />
+      <div ref={containerRef} className="linride-map-canvas" aria-label="LinRide interactive route map of Jamaica. Tap any location to preview it or choose pickup and destination. Following your position stays enabled until you turn it off." />
       {mapError ? (
         <div className="linride-map-config linride-map-recovery" role="alert">
           <MapIcon size={28} aria-hidden="true" />
@@ -605,6 +706,9 @@ export default function LinRideMap({
               <button type="button" aria-pressed={mapStyle === "streets"} className={mapStyle === "streets" ? "active" : ""} onClick={() => setMapStyle("streets")}><Compass size={15} /> Streets</button>
               <button type="button" aria-pressed={mapStyle === "night"} className={mapStyle === "night" ? "active" : ""} onClick={() => setMapStyle("night")}><Layers3 size={15} /> Night</button>
             </div>
+          </div>
+          <div className="lr8-map-extra-controls">
+            {route && <button type="button" onClick={showWholeRoute} title="See your entire route" aria-label="Show whole route"><RouteIcon size={16} /> Route</button>}
           </div>
           <div className="linride-map-view-switch" role="group" aria-label="Map view">
             <button type="button" className={perspective === "3d" ? "active" : ""} onClick={() => setPerspective("3d")} aria-pressed={perspective === "3d"}>
