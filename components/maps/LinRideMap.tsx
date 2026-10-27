@@ -689,7 +689,7 @@ export default function LinRideMap({
       element.setAttribute("aria-label", `${kind === "assigned" ? "Assigned" : "Nearby"} driver ${speedKmh > 2 ? `moving at ${speedKmh} kilometers per hour` : "waiting"}`);
       if (Number.isFinite(driver.heading)) marker.setRotation(driver.heading || 0);
 
-      if (followAssigned && driver.driverId === assignedDriverId) {
+      if (followAssigned && !exploringRef.current && driver.driverId === assignedDriverId) {
         map.easeTo({
           center: [driver.longitude, driver.latitude],
           pitch: perspective === "3d" ? 58 : 0,
