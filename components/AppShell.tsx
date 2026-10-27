@@ -90,7 +90,7 @@ export function AppShell({
             {accountTools && <details className="lr4-sidebar-details"><summary><UserRound size={18} /> Profile picture <ChevronRight size={17} /></summary><div className="lr4-sidebar-tools">{accountTools}</div></details>}
             {notificationTools && <details className="lr4-sidebar-details"><summary><Bell size={18} /> Phone alerts <ChevronRight size={17} /></summary><div className="lr4-sidebar-tools">{notificationTools}</div></details>}
             {currentView === "rider" && gpsTools && (
-              <details className="lr4-sidebar-details">
+              <details className="lr4-sidebar-details" open={drawerOpen && gpsNeedsConfirmation ? true : undefined}>
                 <summary><LocateFixed size={18} /> Location &amp; accuracy {gpsNeedsConfirmation && <span className="lr6-gps-attention">Review</span>} <ChevronRight size={17} /></summary>
                 <div className="lr4-sidebar-tools">{gpsTools}</div>
               </details>
