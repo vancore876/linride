@@ -3430,3 +3430,7 @@ h4,
 @media(prefers-reduced-motion:reduce){
   .lr11-map-stage .lr11-map-primary-tools button{transition:none!important}
 }
+
+/* Keep fullscreen map controls reachable after device rotation. */
+.lr11-map-stage.lr11-map-expanded .lr11-map-primary-tools{display:flex;position:absolute;top:10px;left:10px;z-index:35;gap:7px}
+.lr11-map-stage.lr11-map-expanded .lr11-map-primary-tools button{display:flex;align-items:center;gap:6px;min-height:36px;padding:8px 11px;background:rgba(248,255,249,.97);color:#17432a;border:1px solid rgba(19,65,42,.18);border-radius:12px;font-size:11px;font-weight:850}
