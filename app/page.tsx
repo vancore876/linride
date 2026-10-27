@@ -875,7 +875,7 @@ export default function Home() {
         const moved = last
           ? distanceBetweenCoordinatesMeters(last.latitude, last.longitude, latitude, longitude)
           : Infinity;
-        if (last && (updatedAt - last.time < 25_000 || moved < Math.max(80, accuracy))) return;
+        if (last && (updatedAt - last.time < 12_000 || moved < Math.max(70, accuracy))) return;
         gpsPickupLookupPendingRef.current = true;
         void reverseGeocodeJamaica(latitude, longitude)
           .then((place) => {
@@ -1046,7 +1046,7 @@ export default function Home() {
         lat: latitude,
         lng: longitude,
         accuracyMeters: accuracy,
-        hint: `Nearest mapped address · GPS accuracy: about ${accuracyLabel}`
+        hint: `${pickup.name && pickup.name !== "Dropped pin" ? "Nearest mapped address" : "Map address unavailable"} · GPS accuracy: about ${accuracyLabel}`
       };
       if (activeTrip || activeRideRequestId) {
         autoFollowGpsPickupRef.current = false;
