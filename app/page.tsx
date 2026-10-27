@@ -1081,6 +1081,7 @@ export default function Home() {
   }
 
   async function requestRiderLocationBeforeBooking() {
+    autoFollowGpsPickupRef.current = false;
     setAutoFollowGpsPickup(false); // The booking must keep its explicitly confirmed pickup.
     setCounterOfferJmd(null);
     setAcceptedDriver(null);
@@ -1418,6 +1419,7 @@ export default function Home() {
       updatedAt={gpsUpdatedAt}
       onRetry={() => void requestRiderLocation({ startSearch: false })}
       onStop={() => {
+        autoFollowGpsPickupRef.current = false;
         setGpsTrackingEnabled(false);
         setAutoFollowGpsPickup(false);
         setLiveGpsLocation(null);
@@ -1425,6 +1427,7 @@ export default function Home() {
         setLocationNotice("Live GPS stopped. Your pickup pin remains where you left it.");
       }}
       onFineTunePickup={() => {
+        autoFollowGpsPickupRef.current = false;
         setAutoFollowGpsPickup(false);
         setPickupPinRequest((current) => current + 1);
       }}
