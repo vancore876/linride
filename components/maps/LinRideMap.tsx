@@ -177,6 +177,17 @@ export default function LinRideMap({
   const driverDataRef = useRef<globalThis.Map<string, LiveDriverLocation>>(new globalThis.Map());
   const popupRef = useRef<maplibregl.Popup | null>(null);
   const lastGpsFocusRef = useRef<string | null>(null);
+  // Panning/zooming/tapping is exploration, not turning off the GPS tracker.
+  // Preserve the explored viewport until the rider explicitly recenters.
+  const exploringRef = useRef(false);
+  const userNavigatedRef = useRef(false);
+  const initialRouteFramedRef = useRef(false);
+  const savedCameraRef = useRef<{
+    center: [number, number];
+    zoom: number;
+    bearing: number;
+    pitch: number;
+  } | null>(null);
   const selectionModeRef = useRef(selectionMode);
   const callbacksRef = useRef({ onMapSelect, onPickupMove, onDestinationMove });
   const perspectiveRef = useRef<"3d" | "2d">("2d");
@@ -185,6 +196,7 @@ export default function LinRideMap({
   const [mapStyle, setMapStyle] = useState<"streets" | "night">("streets");
   const [followAssigned, setFollowAssigned] = useState(Boolean(assignedDriverId));
   const [followDevice, setFollowDevice] = useState(true);
+  const [exploring, setExploring] = useState(false);
   const [mapError, setMapError] = useState<string | null>(null);
   const [mapAttempt, setMapAttempt] = useState(0);
   const apiKey = getGeoapifyKey();
@@ -225,15 +237,16 @@ export default function LinRideMap({
       if (cancelled) return;
 
       const is3D = perspectiveRef.current === "3d";
+      const previousCamera = savedCameraRef.current;
       let activeMap: MapLibreMap;
       try {
         activeMap = new maplibregl.Map({
           container,
           style: getGeoapifyStyleUrl(mapStyle),
-          center: validPlace(pickup) ? [pickup!.lng, pickup!.lat] : LINSTEAD_CENTER,
-          zoom: validPlace(pickup) ? 15.2 : 13.4,
-          pitch: is3D ? 48 : 0,
-          bearing: is3D ? -18 : 0,
+          center: previousCamera?.center ?? (validPlace(pickup) ? [pickup!.lng, pickup!.lat] : LINSTEAD_CENTER),
+          zoom: previousCamera?.zoom ?? (validPlace(pickup) ? 15.2 : 13.4),
+          pitch: previousCamera?.pitch ?? (is3D ? 48 : 0),
+          bearing: previousCamera?.bearing ?? (is3D ? -18 : 0),
           maxPitch: 70,
           maxZoom: 20,
           attributionControl: false,
@@ -266,8 +279,20 @@ export default function LinRideMap({
       activeMap.addControl(new maplibregl.NavigationControl({ showCompass: true, visualizePitch: true }), "top-right");
       // GPS is provided by the rider's single continuous watcher in app/page.tsx.
       // Do not launch a second, disconnected geolocation request from the map control.
-      // Manual taps, swipes, marker drags and pin selection never change GPS follow preference.
-      // Only the explicit Follow my position button changes that setting.
+      // The live blue dot continues to update during exploration, but the camera
+      // must not drag back to the old pickup or continuously chase noisy GPS.
+      const pauseCamera = () => {
+        exploringRef.current = true;
+        userNavigatedRef.current = true;
+        setExploring(true);
+      };
+      activeMap.on("dragstart", pauseCamera);
+      activeMap.on("zoomstart", (event) => {
+        if (event.originalEvent) pauseCamera();
+      });
+      activeMap.on("rotatestart", (event) => {
+        if (event.originalEvent) pauseCamera();
+      });
       activeMap.addControl(new maplibregl.AttributionControl({
         compact: true,
         customAttribution: 'Powered by <a href="https://www.geoapify.com/" target="_blank">Geoapify</a> | <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap</a> | <a href="https://openmaptiles.org/" target="_blank">&copy; OpenMapTiles</a>'
@@ -288,6 +313,9 @@ export default function LinRideMap({
       activeMap.on("click", async (event) => {
         const { lat, lng } = event.lngLat;
         if (!isJamaicaCoordinate(lat, lng)) return;
+        // A tap is a request to explore the map; it must not disable GPS,
+        // and must not be undone by the next GPS sample.
+        pauseCamera();
         const mode = selectionModeRef.current;
         if (mode && callbacksRef.current.onMapSelect) {
           const place = await reverseGeocodeJamaica(lat, lng).catch(() => ({
@@ -351,7 +379,16 @@ export default function LinRideMap({
       driverFrames.clear();
       driverMarkers.forEach((marker) => marker.remove());
       driverMarkers.clear();
-      map?.remove();
+      if (map) {
+        const center = map.getCenter();
+        savedCameraRef.current = {
+          center: [center.lng, center.lat],
+          zoom: map.getZoom(),
+          bearing: map.getBearing(),
+          pitch: map.getPitch()
+        };
+        map.remove();
+      }
       if (mapRef.current === map) mapRef.current = null;
     };
   }, [apiKey, mapAttempt, mapStyle]);
@@ -411,7 +448,7 @@ export default function LinRideMap({
       });
       pickupMarkerRef.current = marker;
 
-      if (pickup?.accuracyMeters && !liveGpsLocation) {
+      if (pickup?.accuracyMeters && !liveGpsLocation && !userNavigatedRef.current) {
         const focusKey = `${pickup.lat.toFixed(6)}:${pickup.lng.toFixed(6)}`;
         if (lastGpsFocusRef.current !== focusKey) {
           lastGpsFocusRef.current = focusKey;
@@ -474,7 +511,7 @@ export default function LinRideMap({
       map.addLayer({ id: lineId, type: "line", source: LIVE_ACCURACY_SOURCE_ID,
         paint: { "line-color": "#2899ff", "line-opacity": 0.65, "line-width": 1.5 } });
     }
-    if (followDevice && Date.now() - lastDeviceFocusRef.current >= 700) {
+    if (followDevice && !exploringRef.current && Date.now() - lastDeviceFocusRef.current >= 700) {
       lastDeviceFocusRef.current = Date.now();
       map.easeTo({ center: [gps.lng, gps.lat], zoom: Math.max(15, map.getZoom()), duration: 450 });
     }
@@ -543,15 +580,19 @@ export default function LinRideMap({
     geometryCoordinates(route.routeGeometry).forEach((coordinate) => bounds.extend(coordinate as [number, number]));
     if (validPlace(pickup)) bounds.extend([pickup!.lng, pickup!.lat]);
     if (validPlace(destination)) bounds.extend([destination!.lng, destination!.lat]);
-    // Do not repeatedly jump to fit the route while the map is following the rider.
-    if (!gpsTrackingEnabled || !followDevice) {
-      map.fitBounds(bounds, {
-        padding: { top: 80, right: 70, bottom: 110, left: 70 },
-        maxZoom: 16,
-        duration: 900,
-        pitch: perspective === "3d" ? 52 : 0,
-        bearing: perspective === "3d" ? -18 : 0
-      });
+    // One initial overview only. Later route updates (including live pickup GPS)
+    // must not pull the rider away from a location they are exploring.
+    if (!initialRouteFramedRef.current) {
+      initialRouteFramedRef.current = true;
+      if (!userNavigatedRef.current && !gpsTrackingEnabled && !followDevice) {
+        map.fitBounds(bounds, {
+          padding: { top: 80, right: 70, bottom: 110, left: 70 },
+          maxZoom: 16,
+          duration: 900,
+          pitch: perspective === "3d" ? 52 : 0,
+          bearing: perspective === "3d" ? -18 : 0
+        });
+      }
     }
   }, [destination, followDevice, gpsTrackingEnabled, perspective, pickup, ready, route]);
 
@@ -648,7 +689,7 @@ export default function LinRideMap({
       element.setAttribute("aria-label", `${kind === "assigned" ? "Assigned" : "Nearby"} driver ${speedKmh > 2 ? `moving at ${speedKmh} kilometers per hour` : "waiting"}`);
       if (Number.isFinite(driver.heading)) marker.setRotation(driver.heading || 0);
 
-      if (followAssigned && driver.driverId === assignedDriverId) {
+      if (followAssigned && !exploringRef.current && driver.driverId === assignedDriverId) {
         map.easeTo({
           center: [driver.longitude, driver.latitude],
           pitch: perspective === "3d" ? 58 : 0,
@@ -678,7 +719,30 @@ export default function LinRideMap({
     if (!points.length) return;
     const bounds = new LngLatBounds();
     points.forEach((point) => bounds.extend(point as [number, number]));
+    exploringRef.current = true;
+    userNavigatedRef.current = true;
+    setExploring(true);
     map.fitBounds(bounds, { padding: { top: 85, right: 55, bottom: 105, left: 55 }, maxZoom: 16, duration: 720 });
+  };
+
+  const toggleDeviceFollow = () => {
+    const map = mapRef.current;
+    if (exploringRef.current || !followDevice) {
+      exploringRef.current = false;
+      setExploring(false);
+      setFollowDevice(true);
+      if (map && liveGpsLocation && validPlace(liveGpsLocation)) {
+        lastDeviceFocusRef.current = Date.now();
+        map.easeTo({
+          center: [liveGpsLocation.lng, liveGpsLocation.lat],
+          zoom: Math.max(15, map.getZoom()),
+          duration: 550
+        });
+      }
+    } else {
+      // Turning following off is only possible by an explicit button press.
+      setFollowDevice(false);
+    }
   };
 
   const retryMapIn2D = () => {
@@ -728,9 +792,9 @@ export default function LinRideMap({
           </div>
           {gpsTrackingEnabled && liveGpsLocation && (
             <button type="button" className={`linride-map-follow ${followDevice ? "active" : ""}`} style={{ bottom: assignedDriverId ? 92 : 54 }}
-              onClick={() => setFollowDevice((current) => !current)}
+              onClick={toggleDeviceFollow}
               aria-pressed={followDevice}>
-              <LocateFixed size={15} /> {followDevice ? "Following you" : "Follow my position"}
+              <LocateFixed size={15} /> {exploring ? "Recenter on me" : followDevice ? "Following you" : "Follow my position"}
             </button>
           )}
           {assignedDriverId && (

@@ -3384,3 +3384,10 @@ h4,
 .lr8-route-legend svg{color:#4dbb56}
 .lr8-unified-trip-panel .map-route-address{display:none}
 @media(max-width:730px){.lr8-route-legend{display:none!important}}
+
+/* V9: GPS confirmation is opt-in. No surprise sidebar on live location updates. */
+.lr9-gps-review-action{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:36px;padding:8px 10px;border:1px solid rgba(197,158,39,.28);border-radius:11px;background:#fdf1ce;color:#734d0c;font-weight:900;font-size:11px;white-space:nowrap;cursor:pointer}
+.lr9-gps-review-action:hover,.lr9-gps-review-action:focus-visible{background:#ffe6a0;outline-offset:2px}
+.lr9-gps-review-action:active{transform:scale(.97)}
+@media(max-width:620px){.lr2-header-actions{gap:6px}.lr9-gps-review-action{padding:8px;min-height:33px;font-size:10px}.lr2-header-actions .lr3-menu-shortcut{font-size:11px}}
+@media(prefers-reduced-motion:reduce){.lr9-gps-review-action{transition:none}}
