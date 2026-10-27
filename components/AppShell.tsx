@@ -48,7 +48,7 @@ export function AppShell({
 }: AppShellProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   useEffect(() => { setDrawerOpen(false); }, [currentView]);
-  useEffect(() => { if (gpsNeedsConfirmation && currentView === "rider") setDrawerOpen(true); }, [gpsNeedsConfirmation, currentView]);
+  // GPS updates must never open navigation. A rider opens it explicitly.
   useEffect(() => { if (!drawerOpen) return; const handleKey = (event: KeyboardEvent) => { if (event.key === "Escape") setDrawerOpen(false); }; document.addEventListener("keydown", handleKey); return () => document.removeEventListener("keydown", handleKey); }, [drawerOpen]);
   const current = pageTitle[currentView];
   const visible = sections.filter((section) => section.view !== "admin" || allowAdmin);
@@ -90,7 +90,7 @@ export function AppShell({
             {accountTools && <details className="lr4-sidebar-details"><summary><UserRound size={18} /> Profile picture <ChevronRight size={17} /></summary><div className="lr4-sidebar-tools">{accountTools}</div></details>}
             {notificationTools && <details className="lr4-sidebar-details"><summary><Bell size={18} /> Phone alerts <ChevronRight size={17} /></summary><div className="lr4-sidebar-tools">{notificationTools}</div></details>}
             {currentView === "rider" && gpsTools && (
-              <details className="lr4-sidebar-details" open={gpsNeedsConfirmation ? true : undefined}>
+              <details className="lr4-sidebar-details">
                 <summary><LocateFixed size={18} /> Location &amp; accuracy {gpsNeedsConfirmation && <span className="lr6-gps-attention">Review</span>} <ChevronRight size={17} /></summary>
                 <div className="lr4-sidebar-tools">{gpsTools}</div>
               </details>
@@ -127,6 +127,11 @@ export function AppShell({
               <p>{current.description}</p>
             </div>
             <div className="lr2-header-actions">
+              {currentView === "rider" && gpsNeedsConfirmation && (
+                <button type="button" className="lr9-gps-review-action" onClick={() => setDrawerOpen(true)} aria-label="Open GPS location review in menu">
+                  <LocateFixed size={15} /> Review GPS
+                </button>
+              )}
               <button type="button" className="lr3-menu-shortcut" onClick={() => setDrawerOpen(true)}>Menu <ChevronRight size={16}/></button>
               <span className="lr2-jamaica-chip"><span className="lr2-pulse-dot" /> Made for Jamaica</span>
               <button type="button" onClick={onToggleTheme} className="lr2-icon-action" aria-label={theme === "dark" ? "Use light theme" : "Use dark theme"}><ThemeIcon size={19} /></button>
