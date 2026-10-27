@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, LocateFixed, Map as MapIcon, Radio, Layers3, Compass, ShieldCheck, Route as RouteIcon, Sparkles } from "lucide-react";
+import { Box, LocateFixed, Map as MapIcon, Radio, Layers3, Compass, ShieldCheck, Route as RouteIcon, Sparkles, Maximize2, Minimize2 } from "lucide-react";
 import maplibregl, {
   ExpressionSpecification,
   LngLatBounds,
@@ -196,6 +196,8 @@ export default function LinRideMap({
   const [mapStyle, setMapStyle] = useState<"streets" | "night">("streets");
   const [followAssigned, setFollowAssigned] = useState(Boolean(assignedDriverId));
   const [followDevice, setFollowDevice] = useState(true);
+  const [mapOptionsOpen, setMapOptionsOpen] = useState(false);
+  const [mapExpanded, setMapExpanded] = useState(false);
   const [exploring, setExploring] = useState(false);
   const [mapError, setMapError] = useState<string | null>(null);
   const [mapAttempt, setMapAttempt] = useState(0);
@@ -745,6 +747,20 @@ export default function LinRideMap({
     }
   };
 
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => mapRef.current?.resize());
+    return () => window.cancelAnimationFrame(frame);
+  }, [mapExpanded, mapOptionsOpen]);
+
+  useEffect(() => {
+    if (!mapExpanded) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMapExpanded(false);
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [mapExpanded]);
+
   const retryMapIn2D = () => {
     perspectiveRef.current = "2d";
     setPerspective("2d");
@@ -754,7 +770,7 @@ export default function LinRideMap({
   };
 
   return (
-    <div className="linride-map-stage">
+    <div className={`linride-map-stage lr11-map-stage ${mapExpanded ? "lr11-map-expanded" : ""}`}>
       <div ref={containerRef} className="linride-map-canvas" aria-label="LinRide interactive route map of Jamaica. Tap any location to preview it or choose pickup and destination. Following your position stays enabled until you turn it off." />
       {mapError ? (
         <div className="linride-map-config linride-map-recovery" role="alert">
@@ -765,22 +781,35 @@ export default function LinRideMap({
         </div>
       ) : (
         <>
+          <div className="lr11-map-primary-tools">
+            <button type="button" className={mapOptionsOpen ? "active" : ""} onClick={() => setMapOptionsOpen((open) => !open)}
+              aria-label="Map appearance and route options" aria-expanded={mapOptionsOpen} aria-controls="lr11-map-options">
+              <Layers3 size={17} /> <span>Map options</span>
+            </button>
+            <button type="button" onClick={() => setMapExpanded((expanded) => !expanded)}
+              aria-label={mapExpanded ? "Close expanded map" : "Expand map"} aria-pressed={mapExpanded}>
+              {mapExpanded ? <Minimize2 size={17} /> : <Maximize2 size={17} />}
+              <span>{mapExpanded ? "Close" : "Expand"}</span>
+            </button>
+          </div>
+          <div id="lr11-map-options" className={`lr11-map-secondary ${mapOptionsOpen ? "is-open" : ""}`}>
           <div className="lr2-map-tools">
             <div className="lr2-map-style-switch" role="group" aria-label="Map style">
-              <button type="button" aria-pressed={mapStyle === "streets"} className={mapStyle === "streets" ? "active" : ""} onClick={() => setMapStyle("streets")}><Compass size={15} /> Streets</button>
-              <button type="button" aria-pressed={mapStyle === "night"} className={mapStyle === "night" ? "active" : ""} onClick={() => setMapStyle("night")}><Layers3 size={15} /> Night</button>
+              <button type="button" aria-pressed={mapStyle === "streets"} className={mapStyle === "streets" ? "active" : ""} onClick={() => { setMapStyle("streets"); setMapOptionsOpen(false); }}><Compass size={15} /> Streets</button>
+              <button type="button" aria-pressed={mapStyle === "night"} className={mapStyle === "night" ? "active" : ""} onClick={() => { setMapStyle("night"); setMapOptionsOpen(false); }}><Layers3 size={15} /> Night</button>
             </div>
           </div>
           <div className="lr8-map-extra-controls">
-            {route && <button type="button" onClick={showWholeRoute} title="See your entire route" aria-label="Show whole route"><RouteIcon size={16} /> Route</button>}
+            {route && <button type="button" onClick={() => { showWholeRoute(); setMapOptionsOpen(false); }} title="See your entire route" aria-label="Show whole route"><RouteIcon size={16} /> Route</button>}
           </div>
           <div className="linride-map-view-switch" role="group" aria-label="Map view">
-            <button type="button" className={perspective === "3d" ? "active" : ""} onClick={() => setPerspective("3d")} aria-pressed={perspective === "3d"}>
+            <button type="button" className={perspective === "3d" ? "active" : ""} onClick={() => { setPerspective("3d"); setMapOptionsOpen(false); }} aria-pressed={perspective === "3d"}>
               <Box size={15} /> 3D
             </button>
-            <button type="button" className={perspective === "2d" ? "active" : ""} onClick={() => setPerspective("2d")} aria-pressed={perspective === "2d"}>
+            <button type="button" className={perspective === "2d" ? "active" : ""} onClick={() => { setPerspective("2d"); setMapOptionsOpen(false); }} aria-pressed={perspective === "2d"}>
               <MapIcon size={15} /> 2D
             </button>
+          </div>
           </div>
           <div className="linride-map-live-hud">
             <span className="linride-map-live-count"><Radio size={14} /> {drivers.length} live {drivers.length === 1 ? "driver" : "drivers"}</span>
