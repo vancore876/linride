@@ -180,6 +180,7 @@ export default function Home() {
   const autoFollowGpsPickupRef = useRef(false);
   const bookingLockRef = useRef(false);
   const lastAutoPickupRef = useRef<{ latitude: number; longitude: number; time: number } | null>(null);
+  const gpsPickupLookupPendingRef = useRef(false);
   const [hasBusinessAccount, setHasBusinessAccount] = useState(false);
   const [businessDeliveryRequest, setBusinessDeliveryRequest] = useState<BusinessDelivery | null>(null);
   const [activeBusinessDelivery, setActiveBusinessDelivery] = useState<BusinessDelivery | null>(null);
@@ -866,15 +867,36 @@ export default function Home() {
         setGpsUpdatedAt(updatedAt);
         setLocationPermission("granted");
 
-        if (!autoFollowGpsPickupRef.current || bookingLockRef.current || accuracy > 100) return;
+        // The moving blue GPS dot is independent of the address in the pickup field.
+        // Reverse-geocode only meaningful movement, not every noisy phone reading.
+        if (!autoFollowGpsPickupRef.current || bookingLockRef.current || accuracy > 200 ||
+            gpsPickupLookupPendingRef.current) return;
         const last = lastAutoPickupRef.current;
-        if (last && updatedAt - last.time < 8_000 &&
-          distanceBetweenCoordinatesMeters(last.latitude, last.longitude, latitude, longitude) < Math.max(15, accuracy / 2)) return;
-        lastAutoPickupRef.current = { latitude, longitude, time: updatedAt };
-        setDraft((current) => {
-          if (distanceBetweenCoordinatesMeters(current.pickup.lat, current.pickup.lng, latitude, longitude) < Math.max(10, accuracy / 3)) return current;
-          return { ...current, pickup: location, routeDetails: undefined };
-        });
+        const moved = last
+          ? distanceBetweenCoordinatesMeters(last.latitude, last.longitude, latitude, longitude)
+          : Infinity;
+        if (last && (updatedAt - last.time < 12_000 || moved < Math.max(70, accuracy))) return;
+        gpsPickupLookupPendingRef.current = true;
+        void reverseGeocodeJamaica(latitude, longitude)
+          .then((place) => {
+            if (!active || !autoFollowGpsPickupRef.current || bookingLockRef.current) return;
+            const address = place.name && place.name !== "Dropped pin"
+              ? place.name
+              : `GPS location near ${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
+            const nextPickup: RideRequestDraft["pickup"] = {
+              ...place, name: address, lat: latitude, lng: longitude,
+              accuracyMeters: accuracy,
+              hint: `Device GPS: about ${formatLocationAccuracy(accuracy)} accuracy`
+            };
+            lastAutoPickupRef.current = { latitude, longitude, time: Date.now() };
+            setDraft((current) => ({ ...current, pickup: nextPickup, routeDetails: undefined }));
+          })
+          .catch(() => {
+            // A failed address lookup must not replace a known address with a
+            // misleading generic label. The blue dot still tracks the phone.
+            lastAutoPickupRef.current = { latitude, longitude, time: Date.now() };
+          })
+          .finally(() => { gpsPickupLookupPendingRef.current = false; });
       },
       (error) => {
         if (!active) return;
@@ -977,9 +999,10 @@ export default function Home() {
     setDraft((current) => ({ ...current, pickup, routeDetails: undefined }));
     setLocationCandidate(null);
     setLocationPermission("granted");
+    autoFollowGpsPickupRef.current = true;
     setAutoFollowGpsPickup(true);
     lastAutoPickupRef.current = { latitude: pickup.lat, longitude: pickup.lng, time: Date.now() };
-    setLocationNotice(`Live pickup enabled. ${pickup.hint || "GPS location confirmed."}`);
+    setLocationNotice(`Pickup updated to ${pickup.name}. ${pickup.hint || "GPS location confirmed."}`);
   }
 
   async function requestRiderLocation(options: { startSearch: boolean }) {
@@ -1011,42 +1034,35 @@ export default function Home() {
       setGpsTrackingEnabled(true);
       setLocationNotice(`GPS found within about ${accuracyLabel}. Looking up the nearest mapped address...`);
       const pickup = await reverseGeocodeJamaica(latitude, longitude).catch(() => ({
-        name: "My current GPS location",
+        name: "Dropped pin",
         lat: latitude,
         lng: longitude
       }));
       const candidate = {
         ...pickup,
+        name: pickup.name && pickup.name !== "Dropped pin"
+          ? pickup.name
+          : `GPS location near ${latitude.toFixed(5)}, ${longitude.toFixed(5)}`,
         lat: latitude,
         lng: longitude,
         accuracyMeters: accuracy,
-        hint: `GPS accuracy: about ${accuracyLabel}`
+        hint: `${pickup.name && pickup.name !== "Dropped pin" ? "Nearest mapped address" : "Map address unavailable"} · GPS accuracy: about ${accuracyLabel}`
       };
       if (activeTrip || activeRideRequestId) {
+        autoFollowGpsPickupRef.current = false;
         setAutoFollowGpsPickup(false);
         setLocationPermission("granted");
         setLocationNotice("Your live position is updating. Your booked pickup remains fixed.");
         return;
       }
-      const currentPickup = draft.pickup;
-      const hasCurrentPickup = Number.isFinite(currentPickup.lat) && Number.isFinite(currentPickup.lng) && currentPickup.lat !== 0 && currentPickup.lng !== 0;
-      const mismatchMeters = hasCurrentPickup
-        ? distanceBetweenCoordinatesMeters(currentPickup.lat, currentPickup.lng, latitude, longitude)
-        : 0;
-      const needsConfirmation = accuracy > 100 || mismatchMeters > Math.max(1500, accuracy * 3);
-
-      if (needsConfirmation) {
+      // A precise current GPS fix replaces the initial/default pickup even when
+      // that default is far away. Only weak fixes need explicit confirmation.
+      if (accuracy > 200) {
+        autoFollowGpsPickupRef.current = false;
         setAutoFollowGpsPickup(false);
-        const mismatchLabel = mismatchMeters >= 1000
-          ? `${(mismatchMeters / 1000).toFixed(1)} km`
-          : `${Math.round(mismatchMeters)} m`;
         setLocationCandidate(candidate);
         setLocationPermission("granted");
-        setLocationNotice(
-          hasCurrentPickup
-            ? `Your device reports ${candidate.name}, ${mismatchLabel} from ${currentPickup.name}. It has not replaced your pickup.`
-            : `Your device returned an approximate location near ${candidate.name}. Confirm it before using it as your pickup.`
-        );
+        setLocationNotice(`GPS found ${candidate.name}, but accuracy is only about ${accuracyLabel}. Review the pickup before using it.`);
       } else {
         applyRiderGpsPickup(candidate);
       }
@@ -1065,6 +1081,7 @@ export default function Home() {
   }
 
   async function requestRiderLocationBeforeBooking() {
+    autoFollowGpsPickupRef.current = false;
     setAutoFollowGpsPickup(false); // The booking must keep its explicitly confirmed pickup.
     setCounterOfferJmd(null);
     setAcceptedDriver(null);
@@ -1402,6 +1419,7 @@ export default function Home() {
       updatedAt={gpsUpdatedAt}
       onRetry={() => void requestRiderLocation({ startSearch: false })}
       onStop={() => {
+        autoFollowGpsPickupRef.current = false;
         setGpsTrackingEnabled(false);
         setAutoFollowGpsPickup(false);
         setLiveGpsLocation(null);
@@ -1409,6 +1427,7 @@ export default function Home() {
         setLocationNotice("Live GPS stopped. Your pickup pin remains where you left it.");
       }}
       onFineTunePickup={() => {
+        autoFollowGpsPickupRef.current = false;
         setAutoFollowGpsPickup(false);
         setPickupPinRequest((current) => current + 1);
       }}
@@ -1450,7 +1469,7 @@ export default function Home() {
       gpsTools={gpsTools}
       gpsNeedsConfirmation={Boolean(locationCandidate)}
       onUseCurrentLocation={() => void requestRiderLocation({ startSearch: false })}
-      onSetPickupPin={() => { setAutoFollowGpsPickup(false); setPickupPinRequest((current) => current + 1); }}
+      onSetPickupPin={() => { autoFollowGpsPickupRef.current = false; setAutoFollowGpsPickup(false); setPickupPinRequest((current) => current + 1); }}
       onViewMap={() => document.getElementById("lr3-map-anchor")?.scrollIntoView({ behavior: "smooth", block: "start" })}
     >
       {appMessage && <div className="app-message-banner" role="status">{appMessage}</div>}
@@ -1474,7 +1493,7 @@ export default function Home() {
           locationPermission={locationPermission}
           liveGpsLocation={liveGpsLocation}
           gpsTrackingEnabled={gpsTrackingEnabled}
-          onConfirmPickup={() => setAutoFollowGpsPickup(false)}
+          onConfirmPickup={() => { autoFollowGpsPickupRef.current = false; setAutoFollowGpsPickup(false); }}
           drivers={localPreview ? mockDrivers : []}
           acceptedDriver={acceptedDriver}
           driverOffers={driverOffers}
@@ -1490,6 +1509,7 @@ export default function Home() {
             setDraft(normalizedDraft);
             if (nextDraft.pickup.lat !== draft.pickup.lat || nextDraft.pickup.lng !== draft.pickup.lng ||
                 nextDraft.pickup.name !== draft.pickup.name) {
+              autoFollowGpsPickupRef.current = false;
               setAutoFollowGpsPickup(false); // Search results and hand-placed pins take precedence over GPS.
               setLocationCandidate(null);
             }

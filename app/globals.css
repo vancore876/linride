@@ -3391,3 +3391,46 @@ h4,
 .lr9-gps-review-action:active{transform:scale(.97)}
 @media(max-width:620px){.lr2-header-actions{gap:6px}.lr9-gps-review-action{padding:8px;min-height:33px;font-size:10px}.lr2-header-actions .lr3-menu-shortcut{font-size:11px}}
 @media(prefers-reduced-motion:reduce){.lr9-gps-review-action{transition:none}}
+
+/* V11: Small-map decluttering. Full desktop controls remain available. */
+.lr11-map-primary-tools{display:none}
+.lr11-map-secondary{display:contents}
+.lr11-map-stage .lr11-map-primary-tools button:focus-visible,
+.lr11-map-stage .lr11-map-secondary button:focus-visible{outline:3px solid #2fbf77;outline-offset:2px}
+@media(max-width:960px){
+  .lr11-map-stage .lr11-map-primary-tools{position:absolute;top:10px;left:10px;z-index:35;display:flex;align-items:center;gap:7px}
+  .lr11-map-stage .lr11-map-primary-tools button{display:flex;gap:6px;align-items:center;justify-content:center;min-height:36px;padding:8px 11px;background:rgba(248,255,249,.97);border:1px solid rgba(19,65,42,.18);border-radius:12px;color:#17432a;font-weight:850;font-size:11px;box-shadow:0 5px 15px rgba(14,46,29,.18);backdrop-filter:blur(8px)}
+  .lr11-map-stage .lr11-map-primary-tools button.active{background:#184e31;color:#fff}
+  .lr11-map-stage .lr11-map-secondary{display:none}
+  .lr11-map-stage .lr11-map-secondary.is-open{position:absolute;z-index:34;display:grid;grid-template-columns:1fr;justify-items:stretch;gap:8px;top:53px;left:10px;width:min(235px,calc(100% - 20px));padding:11px;background:rgba(250,255,250,.97);color:#183f27;border:1px solid rgba(19,65,42,.14);border-radius:15px;box-shadow:0 12px 30px rgba(14,46,29,.22);backdrop-filter:blur(10px)}
+  .lr11-map-stage .lr11-map-secondary .lr2-map-tools,
+  .lr11-map-stage .lr11-map-secondary .lr8-map-extra-controls,
+  .lr11-map-stage .lr11-map-secondary .linride-map-view-switch{position:static!important;display:flex;align-items:center;justify-content:stretch;max-width:none;min-width:0;width:100%;padding:0;margin:0;box-shadow:none;pointer-events:auto;background:transparent;border:0;gap:6px}
+  .lr11-map-stage .lr11-map-secondary .lr2-map-style-switch{width:100%;display:flex;padding:3px;border:1px solid #d9e9d6;box-shadow:none;background:#edf6ec;border-radius:10px}
+  .lr11-map-stage .lr11-map-secondary .lr2-map-style-switch button,
+  .lr11-map-stage .lr11-map-secondary .linride-map-view-switch button{display:flex;flex:1;min-width:0;min-height:36px;justify-content:center;padding:8px 6px;border-radius:8px;font-size:11px}
+  .lr11-map-stage .lr11-map-secondary .lr8-map-extra-controls button{width:100%;display:flex;justify-content:center;background:#e4f4e2;color:#1c5333;border-radius:9px;min-height:35px}
+  .lr11-map-stage .maplibregl-ctrl-top-right{display:none}
+  .lr11-map-stage .linride-map-live-hud{right:9px;bottom:10px;left:auto;max-width:calc(100% - 140px);padding:7px 10px;font-size:11px;border-radius:11px;gap:5px;background:rgba(251,255,249,.95)}
+  .lr11-map-stage .linride-map-live-hud .linride-map-live-count,
+  .lr11-map-stage .linride-map-live-hud .lr2-map-data,
+  .lr11-map-stage .linride-map-live-hud .lr8-route-legend{display:none!important}
+  .lr11-map-stage .linride-map-follow{bottom:10px!important;left:9px;max-width:60%;min-height:36px;padding:7px 10px;border-radius:11px;font-size:10px;line-height:1.2}
+  .lr11-map-stage .linride-map-follow+ .linride-map-follow{bottom:58px!important}
+  .lr2-rider-map-shell:has(.lr11-map-expanded){overflow:visible!important}
+  .lr11-map-stage.lr11-map-expanded{position:fixed!important;inset:0!important;z-index:900!important;width:100vw!important;height:100dvh!important;min-height:100dvh!important;max-height:100dvh!important;border-radius:0!important;box-shadow:none!important;overflow:hidden!important}
+  .lr11-map-expanded .linride-map-canvas{height:100dvh!important;min-height:100dvh!important;max-height:100dvh!important}
+  .lr11-map-expanded .lr11-map-primary-tools{top:max(12px,env(safe-area-inset-top));left:12px}
+}
+@media(max-width:480px){
+  .lr11-map-stage .lr11-map-primary-tools button{font-size:10px;padding:8px}
+  .lr11-map-stage .linride-map-live-hud{font-size:10px;max-width:calc(100% - 146px)}
+  .lr11-map-stage .linride-map-follow{font-size:10px}
+}
+@media(prefers-reduced-motion:reduce){
+  .lr11-map-stage .lr11-map-primary-tools button{transition:none!important}
+}
+
+/* Keep fullscreen map controls reachable after device rotation. */
+.lr11-map-stage.lr11-map-expanded .lr11-map-primary-tools{display:flex;position:absolute;top:10px;left:10px;z-index:35;gap:7px}
+.lr11-map-stage.lr11-map-expanded .lr11-map-primary-tools button{display:flex;align-items:center;gap:6px;min-height:36px;padding:8px 11px;background:rgba(248,255,249,.97);color:#17432a;border:1px solid rgba(19,65,42,.18);border-radius:12px;font-size:11px;font-weight:850}
